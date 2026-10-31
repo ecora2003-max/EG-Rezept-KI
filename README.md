@@ -12,6 +12,10 @@
 - Bestätigte Allergene, Ernährungseinschränkungen und explizit gesperrte Lebensmittel werden geprüft; unbekannte Sicherheit bleibt `REVIEW_REQUIRED`. Menge, Nährstoff, Haltbarkeit und Lagerplatz werden niemals erfunden.
 - Meal Prep rechnet Rohzutaten nur auf die **gesamte geplante Portionenzahl**, mit eingefrorenen Portionen als Planung; `rawIngredientsCharged=false`, `preparedPortionsCreated=false`, `consumptionRecorded=false`. Keine Buchung erfolgt.
 
+## Optionale 1-/7-/56-Tageplanung
+
+Ein separater `MealPlanDraftPlanner` erzeugt aus synthetischen Tages-Slots und bestätigten Eingaben standardisierte, einzeln validierte `recipe.draft`-Nachrichten. Dieselbe Plan-ID verbindet Tages-, Wochen- und 56-Tage-Ansichten; Zutatenmengen werden je eindeutigem Slot aggregiert, nicht durch zusätzliche Planungsübersichten doppelt gezählt. Unbekannte Mengen bleiben unbekannt, Lagerbuchung/Kochen/Verzehr erfolgen nicht. Nicht unterstützte Gefrierzuweisungen werden explizit abgewiesen. [API, Grenzen und Tests](docs/MEAL_PLAN.md).
+
 ## Ohne Server, API-Schlüssel oder Bezahldienst testen
 
 Der Kern benötigt lediglich JDK 17+, Kotlin-Compiler 1.9+, Python 3. Die ursprüngliche Kern-Quelldatei und ihr 47-Test-Treiber werden in diesem Repository aus einem **SHA-256-validierten komprimierten Quellarchiv** wiederhergestellt; die weiteren Generatoren, Tests und Beispiele liegen direkt im Repo als lesbare `.kt`-Dateien. Zur einmaligen Wiederherstellung wird das freie Python-Paket `brotli==1.1.0` benötigt, **nicht** für die Kotlin-Runtime.
