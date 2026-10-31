@@ -93,3 +93,23 @@ Verbotene/geschützte Informationen werden ausschließlich über `confirmed=true
 Ein reproduzierbarer Kotlin-/Python-Workflow prüft **129 synthetische Offline-Funktionstests** plus zwei gültige und sechzehn bewusst fehlerhafte JSON-Messages sowie 56 Plan-Rezepte im vollständigen Draft-2020-12-Validator gegen die gepinnte Architekturdatei. [GitHub CI Run 41224635664](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41224635664) erfolgreich. Änderungen am Architekturvertrag erfordern erneute Anpassungs- und Negativtests; das Schema ist als `1.0.0-draft` nicht final freigegeben.
 
 **Noch nicht umgesetzt:** echte Android-Host-/Room-Integration, Hardware-Tests, on-device LLM. Diese Grenzen nicht als bestandene Tests ausgeben. Keine eigene Rezept-, Einkaufs-, Vorrats-, Charge- oder Verzehrdatenbank.
+
+## Optionaler Android-Hostadapter mit explizitem Opt-in (neuer, **nicht auf Gerät geprüfter** Pfad)
+
+Zusätzlich zu den oben genannten Quelldateien bei optionalem lokalen Modellbetrieb `src/main/kotlin/de/eg/recipe/AndroidLocalModelAdapter.kt` in das Android-Source-Set aufnehmen. Der Host implementiert `AndroidLocalModelAdapter.AndroidBridge` mit `checkStatus()` und `generateLocally(request)` **nur**, wenn die tatsächliche SDK-/Geräteprüfung ausschließlich lokale Ausführung belegt. Kein cloudbasierter Bridge-Adapter. Die drei Authorization-Bools sind Host-Aussagen, keine Geräte-Attestation:
+
+```kotlin
+val result = AndroidLocalModelAdapter.propose(
+    request = request, facts = facts,
+    authorization = AndroidLocalModelAdapter.Authorization(
+        userOptedIn = userExplicitlyEnabledLocalModel,
+        requestDataApproved = userApprovedThisRequestForLocalInference,
+        localOnlyExecutionVerified = hostVerifiedLocalOnlyRuntime
+    ),
+    bridge = localAndroidBridgeOrNull
+)
+// result.recipes enthält ausschließlich unbestätigte recipe.draft-Vorschläge.
+// Kein Kochen, kein Einkauf, keine Bestands- oder Verzehrbuchung.
+```
+
+Wenn irgendeine Freigabe fehlt, wird die Bridge **nicht einmal nach Status gefragt**; der deterministische Offline-Generator liefert Vorschläge. Bei `DOWNLOADABLE`/`DOWNLOADING` wird kein Modelldownload ausgelöst. Alle 8 Kontextflag-Kombinationen werden zusätzlich im Gateway gefiltert; eine echte Privacy-/Netzwerkprüfung bleibt Host-Aufgabe. **Nur synthetische JVM-Fake-Bridge getestet**, kein ML Kit/AICore und keine Android-Instrumentation. Nachweis: [CI 41226586359](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41226586359), 16 neue Porttests als Teil von 145 Kotlin-Tests; 74 Schema-Fälle.
