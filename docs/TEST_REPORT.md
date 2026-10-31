@@ -1,17 +1,17 @@
 # Offline-Fachkern und Vertragsprüfung: gemessener Testbericht
 
-**Datum:** 31.10.2026. **Vertrag:** `EG-Architecture@d22862739bd0e3ef8451ce029e54f7c33ee53e40` (`1.0.0-draft`). **Verifizierter GitHub-Codecommit:** `db481b3b3779b1e6d4c36d7e3d40909f8f699c36`.
+**Datum:** 31.10.2026. **Vertrag:** `EG-Architecture@25541fc877751f81848ac160cb0d9577cbcf83c8` (`1.0.0-draft`). **Verifizierter GitHub-Codecommit:** `e50a6c3a6eedf1417818285a895786f290616625`.
 
 ## Reproduzierbarkeit
 
-GitHub Actions [Run 41223911853](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41223911853) ist **completed/success**, einschließlich aller Ausführungsschritte und kompletter JSON-Schema-2020-12-Validierung. Runner: Ubuntu, Temurin JDK 17, Kotlin 1.9.25, Python 3.11, freie `brotli==1.1.0` und `jsonschema==4.26.0`, ausschließlich synthetische Daten.
+GitHub Actions [Run 41224635664](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41224635664) ist **completed/success**, einschließlich aller Ausführungsschritte und kompletter JSON-Schema-2020-12-Validierung. Runner: Ubuntu, Temurin JDK 17, Kotlin 1.9.25, Python 3.11, freie `brotli==1.1.0` und `jsonschema==4.26.0`, ausschließlich synthetische Daten.
 
 ```bash
 python3 -m pip install brotli==1.1.0
 bash scripts/test.sh
 # GitHub CI zusätzlich:
 python3 -m pip install jsonschema==4.26.0
-# Pinned: EG-Architecture commit d228627...
+# Pinned: EG-Architecture commit 25541fc...
 python3 scripts/full_contract_check.py build/recipe-draft.json build/contract.schema.json
 python3 scripts/full_contract_check.py build/smart-draft.json build/contract.schema.json
 python3 scripts/plan_contract_check.py build/meal-plan-drafts.json build/contract.schema.json
@@ -30,11 +30,17 @@ Der Runner prüft zunächst per SHA-256 das Archiv `transfer/bundle.part1.b64` +
 | `MealPlanHorizonTest` – 1/7/56 Tage, Planidentität, No-Side-Effects | 7 | 0 | 0 |
 | `MealPlanSafetyTest` – Einschränkungen, acht Flags, unbekannte Lagerkapazität | 7 | 0 | 0 |
 | `MealPlanDemandTest` – Dubletten-Konflikte, Struktur, Einheiten, Überlauf, Nullmengen | 16 | 0 | 0 |
+| `RecipeDraftImportTest` – strikte importierte Mengen, Flags, Status, Metadaten | 14 | 0 | 0 |
+| `RecipeDraftRevalidationTest` – unabhängiger Allergen-/Faktencheck nach Einlesen | 7 | 0 | 0 |
 | JSON-Schema Draft 2020-12 – zwei positive Nachrichten | 2 | 0 | 0 |
 | JSON-Schema Draft 2020-12 – je acht absichtlich ungültige Nachrichten abgewiesen | 16 | 0 | 0 |
 | JSON-Schema Draft 2020-12 – 56 synthetische Plan-Rezepte | 56 | 0 | 0 |
 
-**108/108 Kotlin-Testfälle und 74/74 vollständige Schema-Prüffälle bestanden**. Zusätzlich zwei einfache Vertragsstrukturprüfungen `scripts/contract_check.py`. CI-Log: `SUMMARY passed=47 failed=0`, `SUMMARY combinatorial_generator passed=10 failed=0`, `SUMMARY goal_aware_planner passed=8 failed=0`, `SUMMARY on_device_gateway passed=13 failed=0`, zweimal `PASS full draft 2020-12 recipe.draft message` und zweimal `PASS 8 malformed messages rejected`, `SUMMARY meal_plan_horizon passed=7 failed=0`, `SUMMARY meal_plan_safety passed=7 failed=0`, `SUMMARY meal_plan_demand passed=16 failed=0`, `PASS 56 plan drafts satisfy pinned draft-2020-12 schema`. Diese Resultate belegen **keine** getestete Android-App.
+**129/129 Kotlin-Testfälle und 74/74 vollständige Schema-Prüffälle bestanden**. Zusätzlich zwei einfache Vertragsstrukturprüfungen `scripts/contract_check.py`. CI-Log: `SUMMARY passed=47 failed=0`, `SUMMARY combinatorial_generator passed=10 failed=0`, `SUMMARY goal_aware_planner passed=8 failed=0`, `SUMMARY on_device_gateway passed=13 failed=0`, zweimal `PASS full draft 2020-12 recipe.draft message` und zweimal `PASS 8 malformed messages rejected`, `SUMMARY meal_plan_horizon passed=7 failed=0`, `SUMMARY meal_plan_safety passed=7 failed=0`, `SUMMARY meal_plan_demand passed=16 failed=0`, `SUMMARY recipe_draft_import passed=14 failed=0`, `SUMMARY recipe_draft_revalidation passed=7 failed=0`, `PASS 56 plan drafts satisfy pinned draft-2020-12 schema`. Diese Resultate belegen **keine** getestete Android-App.
+
+## Neuer Import-Sicherheitsnachweis
+
+Der Host-map-Reader weist falsche Versionen, fremde Nachrichtentypen, bestätigte/gebuchte Status, unvollständige oder typfehlerhafte Flagkombinationen, nichtganzzahlige/negative/überlaufende Mengen, inkompatible Einheiten, fehlende Schritte sowie manipulierte Buchungsbehauptungen zurück. Selbst ein extern gesetztes `STRUCTURALLY_VALID`-Merkmal bleibt **untrusted**. Die zweite Validierungsstufe führt bekannte Allergene/Verbote mit unabhängigen Host-Fakten neu durch; unbekannte Roh-/Gareinheiten ergeben keine scheinbar vollständigen Nährstoffbilanzen. Vollständige JSON-Parsing- und Android-Geräteintegration stehen weiterhin aus. [Importvertrag](IMPORT.md).
 
 ## Grenz- und Invariantenfälle
 
