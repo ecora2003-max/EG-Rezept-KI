@@ -1,3 +1,32 @@
+# Neuester Testnachweis – 31.10.2026, 18:08 UTC
+
+**Code-/Test-Commit** `0f4b3cc34f42be63a1b47a6afbb739dc9df9ecf1` · [GitHub Actions Run 41227672665](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41227672665) · Job `124615113444` · **completed/success**, alle Schritte erfolgreich. Ubuntu / JDK17 / Kotlin1.9.25 / Python3.11, synthetische Testdaten.
+
+| Prüfgruppe | Pass | Fail | Skip |
+| --- | ---: | ---: | ---: |
+| Rezeptkern / Validator / Mengen / Nutrition | 47 | 0 | 0 |
+| Kombinationsgenerator | 10 | 0 | 0 |
+| bestätigte Zielplanung | 8 | 0 | 0 |
+| On-Device-Fake-Gateway | 13 | 0 | 0 |
+| 1/7/56-Tage-Horizont | 7 | 0 | 0 |
+| Planungssicherheit / 8 Flags | 7 | 0 | 0 |
+| Bedarfsaggregation inkl. fehlender Mengen / Overflow | 16 | 0 | 0 |
+| Rezeptmap-Import / Eingangsvalidierung | 14 | 0 | 0 |
+| deterministische Revalidierung importierter Entwürfe | 7 | 0 | 0 |
+| Android-Hostport mit Privacy-/Offline-Fake | 16 | 0 | 0 |
+| **neu: begrenzter typgenauer JSON-Decoder** | **24** | **0** | **0** |
+| **Kotlin-Summe** | **169** | **0** | **0** |
+| vollständige Draft-2020-12-Kontrakte (2 positive, 16 negative, 56 Plandrafts) | 74 | 0 | 0 |
+| Buildprüfung aller öffentlichen Kotlin-Klassen im eigenständigen JAR | 1 | 0 | 0 |
+
+**Reproduzierbare Befehle:** `python3 -m pip install brotli==1.1.0 && bash scripts/test.sh`; darin neu `kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/main/kotlin/de/eg/recipe/RecipeDraftImport.kt src/main/kotlin/de/eg/recipe/RecipeDraftRevalidation.kt src/main/kotlin/de/eg/recipe/BoundedDraftJson.kt src/test/kotlin/de/eg/recipe/BoundedDraftJsonTest.kt -include-runtime -d build/bounded-draft-json-tests.jar`, `java -ea -cp build/bounded-draft-json-tests.jar de.eg.recipe.BoundedDraftJsonTest` und `bash scripts/build_library.sh`. CI: `python3 -m pip install jsonschema==4.26.0`, danach je `python3 scripts/full_contract_check.py build/recipe-draft.json build/contract.schema.json` / `build/smart-draft.json` und `python3 scripts/plan_contract_check.py build/meal-plan-drafts.json build/contract.schema.json`. Unveränderte v1-Schema-Blob-SHA `bedde4677342817fe6b883962c8dfbbd60100072` vom gepinnten Architekturcommit `25541fc877751f81848ac160cb0d9577cbcf83c8` (neuester Architektur-HEAD `d7aa7dda1f0a34b52102b35785195e7ade26ceb4`, v1 unverändert). JAR-Check `PASS compiled Kotlin-only release JAR with all required public ports`.
+
+**Neue funktionale Grenze:** `BoundedDraftJson` ist ein echter JSON-Decoder mit strikten Eingabe-/Tiefen-/Knoten-/String- und Zahlenlimits, aber kein JSON-Schema-Validator. `RecipeDraftImport` und `RecipeDraftRevalidation` verwenden weiterhin Host-Fakten und keine untrusted Claims. Ein Android-Gerät, Room-/Compose-App, AICore/ML-Kit-Inferenz oder echte Allergie-/Nährwert-/Quellenbelege wurden **nicht** getestet. Der v1.1-Shopping-Draft-Vertrag wurde bewusst nicht aktiviert.
+
+---
+
+## Historischer, beim vorigen Meilenstein verifizierter Teststand
+
 # Offline-Fachkern und Vertragsprüfung: gemessener Testbericht
 
 **Datum:** 31.10.2026. **Vertrag:** `EG-Architecture@25541fc877751f81848ac160cb0d9577cbcf83c8` (`1.0.0-draft`). **Verifizierter GitHub-Codecommit:** `e50a6c3a6eedf1417818285a895786f290616625`.
