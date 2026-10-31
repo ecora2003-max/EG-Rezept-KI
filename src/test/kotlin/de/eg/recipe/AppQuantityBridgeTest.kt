@@ -7,7 +7,7 @@ object AppQuantityBridgeTest {
     @JvmStatic fun main(args:Array<String>){
         var passed=0
         fun test(fn:()->Unit){fn();passed++;println("PASS app-unit case "+passed)}
-        test{val p=AppQuantityBridge.project(line(200));check(p.amountMilli==200000L&&p.structurallyMappable)}
+        test{val p=AppQuantityBridge.project(line(200));check(p.amountMilli==200000L&&p.structurallyMappable&&p.sourceBasis==RecipeEngine.Basis.NET&&p.sourceState==RecipeEngine.State.RAW&&p.sourceFoodTypeId=="synthetic-food")}
         test{val p=AppQuantityBridge.project(line(125,RecipeEngine.UnitCode.ML));check(p.amountMilli==125000L&&p.unit==AppQuantityBridge.HostUnit.MILLILITRE)}
         test{val p=AppQuantityBridge.project(line(2,RecipeEngine.UnitCode.PORTION,RecipeEngine.Basis.PER_PORTION));check(p.amountMilli==2000L)}
         test{val p=AppQuantityBridge.project(line(null));check(p.amountMilli==null&&AppQuantityBridge.Gap.UNKNOWN_AMOUNT in p.issues)}
