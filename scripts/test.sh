@@ -15,3 +15,5 @@ java -ea -cp build/goal-tests.jar de.eg.recipe.GoalAwareRecipePlannerTest
 kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/main/kotlin/de/eg/recipe/CombinatorialGenerator.kt src/main/kotlin/de/eg/recipe/GoalAwareRecipePlanner.kt examples/SmartDemo.kt -include-runtime -d build/smart-demo.jar
 java -jar build/smart-demo.jar > build/smart-draft.json
 python3 scripts/contract_check.py build/smart-draft.json
+kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/main/kotlin/de/eg/recipe/CombinatorialGenerator.kt src/main/kotlin/de/eg/recipe/OnDeviceRecipeGateway.kt src/test/kotlin/de/eg/recipe/OnDeviceRecipeGatewayTest.kt -include-runtime -d build/on-device-gateway-tests.jar
+java -ea -cp build/on-device-gateway-tests.jar de.eg.recipe.OnDeviceRecipeGatewayTest
