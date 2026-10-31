@@ -17,6 +17,13 @@ Nach dieser einmaligen Source-Extraktion in einen sauberen Checkout als **pure K
 - `src/main/kotlin/de/eg/recipe/GoalAwareRecipePlanner.kt`
 - `src/main/kotlin/de/eg/recipe/OnDeviceRecipeGateway.kt`
 
+For optional read-only 1/7/56-day planning and demand projections, additionally include:
+
+- `src/main/kotlin/de/eg/recipe/MealPlanDraftPlanner.kt`
+- `src/main/kotlin/de/eg/recipe/MealPlanBuild.kt`
+- `src/main/kotlin/de/eg/recipe/MealPlanView.kt`
+- `src/main/kotlin/de/eg/recipe/MealPlanDemand.kt`
+
 Benötigt `java.math.BigDecimal`, `java.time.LocalDate/OffsetDateTime`; `minSdk 26` empfohlen, ansonsten `coreLibraryDesugaring` samt Android-Gerätetests. Keine verpflichtende Server-/Cloud- oder On-Device-AI-Bibliothek. Namen und Datentypen sind vom tatsächlichen Room-Schema entkoppelt.
 
 ## Beispiel: rein lesender Android-Adapter
@@ -59,6 +66,7 @@ val draftJson = result.messages.map(JsonOutput::encode)
 - `RecipeEngine.estimateNutrition(candidate,facts)`: `BigDecimal`-Summen pro Rezept und Portion, nur kompatible `g/ml`, Roh-/Gargewichte, `NET/DRAINED`, mit Quellennachweis; fehlende Summen bleiben `null`, Teilbeträge und Lücken separat.
 - `RecipeEngine.propose(request,facts,RecipeEngine.ProvidedCandidates(listOf(candidate)))`: KI-Integrationsport, markiert alle fremden Kandidaten mindestens `REVIEW_REQUIRED`. Nicht ungeprüft an App weitergeben.
 - `JsonOutput.encode(message)`: lesbares, versioniertes JSON unter Architekturtyp `recipe.draft`; optionale Zusatzfelder ausschließlich in `payload.xRecipeKi`.
+- `MealPlanDraftPlanner.propose(request, facts)` und `Plan.view(firstDay, days)`: optionale, rein lesende Planung mit identischer Plan-ID und deterministischer Bedarfsprojektion. `MealPlanDemand.aggregate` akzeptiert nur strukturell auswertbare Entwürfe, verwirft widersprüchliche Duplikat-IDs per `IllegalArgumentException` und kennzeichnet unbekannte Mengen als `null`. **Fehler müssen im Host sichtbar sein**, nicht als leerer Bedarf interpretiert werden. Siehe [MEAL_PLAN.md](MEAL_PLAN.md).
 
 ### Inputs
 
