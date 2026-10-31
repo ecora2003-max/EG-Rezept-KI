@@ -2,7 +2,19 @@ name: Recipe Kotlin offline tests
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'examples/**'
+      - 'transfer/**'
+      - '.github/workflows/offline-tests.yml'
   pull_request:
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'examples/**'
+      - 'transfer/**'
+      - '.github/workflows/offline-tests.yml'
 permissions:
   contents: read
 jobs:
