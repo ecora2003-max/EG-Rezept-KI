@@ -46,3 +46,4 @@ jobs:
             https://raw.githubusercontent.com/ecora2003-max/EG-Architecture/d22862739bd0e3ef8451ce029e54f7c33ee53e40/contracts/v1/contract.schema.json \
             --output build/contract.schema.json
           python scripts/full_contract_check.py build/recipe-draft.json build/contract.schema.json
+          python scripts/full_contract_check.py build/smart-draft.json build/contract.schema.json
