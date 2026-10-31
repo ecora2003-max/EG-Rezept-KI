@@ -16,6 +16,8 @@ Nach dieser einmaligen Source-Extraktion in einen sauberen Checkout als **pure K
 - `src/main/kotlin/de/eg/recipe/CombinatorialGenerator.kt`
 - `src/main/kotlin/de/eg/recipe/GoalAwareRecipePlanner.kt`
 - `src/main/kotlin/de/eg/recipe/OnDeviceRecipeGateway.kt`
+- `src/main/kotlin/de/eg/recipe/RecipeDraftImport.kt`
+- `src/main/kotlin/de/eg/recipe/RecipeDraftRevalidation.kt`
 
 For optional read-only 1/7/56-day planning and demand projections, additionally include:
 
