@@ -15,6 +15,7 @@ Nach dieser einmaligen Source-Extraktion in einen sauberen Checkout als **pure K
 - `src/main/kotlin/de/eg/recipe/RecipeEngine.kt`
 - `src/main/kotlin/de/eg/recipe/CombinatorialGenerator.kt`
 - `src/main/kotlin/de/eg/recipe/GoalAwareRecipePlanner.kt`
+- `src/main/kotlin/de/eg/recipe/OnDeviceRecipeGateway.kt`
 
 Benötigt `java.math.BigDecimal`, `java.time.LocalDate/OffsetDateTime`; `minSdk 26` empfohlen, ansonsten `coreLibraryDesugaring` samt Android-Gerätetests. Keine verpflichtende Server-/Cloud- oder On-Device-AI-Bibliothek. Namen und Datentypen sind vom tatsächlichen Room-Schema entkoppelt.
 
@@ -49,6 +50,7 @@ val draftJson = result.messages.map(JsonOutput::encode)
 
 ## Eingangs- und Ausgangs-Ports
 
+- `OnDeviceRecipeGateway.propose(request, facts, model, offline)` kapselt **optionale lokale** Modelle. Vor Aufruf prüft der Host tatsächliche Android-Statusverfügbarkeit (kein Gerät angenommen); der Gateway entfernt inaktive und nicht freigegebene Stock-/Shopping-/Offer-Snapshots **vor der Modellübergabe**, begrenzt Modellergebnisse auf 32 Kandidaten, revalidiert alles über `ProvidedCandidates`, verwirft blockierte Vorschläge und fällt bei nicht verfügbarem/fehlerhaftem Modell deterministisch offline zurück. `LOCAL_UNTRUSTED_MODEL` ist nie eine Sicherheitsfreigabe. 13 Tests mit Fake-Modell sind nachgewiesen, **kein echter ML-Kit/AICore-Test**.
 - `RecipeEngine.RecipeCandidateGenerator.generate(request)`: deterministische Offline-Templates oder anderer Kandidatenlieferant.
 - `CombinatorialGenerator(maxCandidates=27)`: 27 Getreide×Hülsenfrucht×Gemüse-Gerichte mit klaren Mengen/Zubereitungsschritten, filterbar nach `mealType` und nach Vorlieben sortierbar.
 - `HybridGenerator(maximumNewRecipes=12)`: standardmäßig 14 Hauptgerichte (2 Basis + 12 Kombinationen); keine Doppelberechnung über die Quelldatenbank.
@@ -74,6 +76,6 @@ Verbotene/geschützte Informationen werden ausschließlich über `confirmed=true
 
 ## Validierung, Releases und offene Gate
 
-Ein reproduzierbarer Kotlin-/Python-Workflow prüft **65 synthetische Offline-Funktionstests** plus zwei gültige und sechzehn defekte JSON-Messages im vollständigen Draft-2020-12-Validator gegen die gepinnte Architekturdatei. [GitHub CI Run 41220695779](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41220695779) erfolgreich. Änderungen am Architekturvertrag erfordern erneute Anpassungs- und Negativtests; das Schema ist als `1.0.0-draft` nicht final freigegeben.
+Ein reproduzierbarer Kotlin-/Python-Workflow prüft **78 synthetische Offline-Funktionstests** plus zwei gültige und sechzehn defekte JSON-Messages im vollständigen Draft-2020-12-Validator gegen die gepinnte Architekturdatei. [GitHub CI Run 41221248578](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41221248578) erfolgreich. Änderungen am Architekturvertrag erfordern erneute Anpassungs- und Negativtests; das Schema ist als `1.0.0-draft` nicht final freigegeben.
 
 **Noch nicht umgesetzt:** echte Android-Host-/Room-Integration, Hardware-Tests, on-device LLM. Diese Grenzen nicht als bestandene Tests ausgeben. Keine eigene Rezept-, Einkaufs-, Vorrats-, Charge- oder Verzehrdatenbank.
