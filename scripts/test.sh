@@ -20,3 +20,6 @@ java -ea -cp build/on-device-gateway-tests.jar de.eg.recipe.OnDeviceRecipeGatewa
 kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/main/kotlin/de/eg/recipe/CombinatorialGenerator.kt src/main/kotlin/de/eg/recipe/GoalAwareRecipePlanner.kt src/main/kotlin/de/eg/recipe/MealPlanDraftPlanner.kt src/main/kotlin/de/eg/recipe/MealPlanBuild.kt src/main/kotlin/de/eg/recipe/MealPlanView.kt src/main/kotlin/de/eg/recipe/MealPlanDemand.kt src/test/kotlin/de/eg/recipe/MealPlanHorizonTest.kt src/test/kotlin/de/eg/recipe/MealPlanSafetyTest.kt -include-runtime -d build/meal-plan-tests.jar
 java -ea -cp build/meal-plan-tests.jar de.eg.recipe.MealPlanHorizonTest
 java -ea -cp build/meal-plan-tests.jar de.eg.recipe.MealPlanSafetyTest
+kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/main/kotlin/de/eg/recipe/CombinatorialGenerator.kt src/main/kotlin/de/eg/recipe/GoalAwareRecipePlanner.kt src/main/kotlin/de/eg/recipe/MealPlanDraftPlanner.kt src/main/kotlin/de/eg/recipe/MealPlanBuild.kt src/main/kotlin/de/eg/recipe/MealPlanView.kt src/main/kotlin/de/eg/recipe/MealPlanDemand.kt examples/MealPlanDemo.kt -include-runtime -d build/meal-plan-demo.jar
+java -jar build/meal-plan-demo.jar > build/meal-plan-drafts.json
+python3 -m json.tool build/meal-plan-drafts.json > /dev/null
