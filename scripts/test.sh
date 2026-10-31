@@ -26,3 +26,5 @@ java -jar build/meal-plan-demo.jar > build/meal-plan-drafts.json
 python3 -m json.tool build/meal-plan-drafts.json > /dev/null
 kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/main/kotlin/de/eg/recipe/RecipeDraftImport.kt src/test/kotlin/de/eg/recipe/RecipeDraftImportTest.kt -include-runtime -d build/recipe-import-tests.jar
 java -ea -cp build/recipe-import-tests.jar de.eg.recipe.RecipeDraftImportTest
+kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/main/kotlin/de/eg/recipe/RecipeDraftImport.kt src/main/kotlin/de/eg/recipe/RecipeDraftRevalidation.kt src/test/kotlin/de/eg/recipe/RecipeDraftRevalidationTest.kt -include-runtime -d build/recipe-revalidation-tests.jar
+java -ea -cp build/recipe-revalidation-tests.jar de.eg.recipe.RecipeDraftRevalidationTest
