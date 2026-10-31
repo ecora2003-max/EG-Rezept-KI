@@ -24,3 +24,5 @@ java -ea -cp build/meal-plan-tests.jar de.eg.recipe.MealPlanDemandTest
 kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/main/kotlin/de/eg/recipe/CombinatorialGenerator.kt src/main/kotlin/de/eg/recipe/GoalAwareRecipePlanner.kt src/main/kotlin/de/eg/recipe/MealPlanDraftPlanner.kt src/main/kotlin/de/eg/recipe/MealPlanBuild.kt src/main/kotlin/de/eg/recipe/MealPlanView.kt src/main/kotlin/de/eg/recipe/MealPlanDemand.kt examples/MealPlanDemo.kt -include-runtime -d build/meal-plan-demo.jar
 java -jar build/meal-plan-demo.jar > build/meal-plan-drafts.json
 python3 -m json.tool build/meal-plan-drafts.json > /dev/null
+kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/main/kotlin/de/eg/recipe/RecipeDraftImport.kt src/test/kotlin/de/eg/recipe/RecipeDraftImportTest.kt -include-runtime -d build/recipe-import-tests.jar
+java -ea -cp build/recipe-import-tests.jar de.eg.recipe.RecipeDraftImportTest
