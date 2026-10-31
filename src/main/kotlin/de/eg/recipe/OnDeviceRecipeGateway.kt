@@ -29,8 +29,15 @@ object OnDeviceRecipeGateway {
         offline: RecipeEngine.RecipeCandidateGenerator = HybridGenerator()
     ): Output {
         // Preserve independence: disabled inputs must never even reach model code.
-        fun dated(value: String?): Boolean = value != null &&
-            runCatching { java.time.OffsetDateTime.parse(value) }.isSuccess
+        // A future-dated context snapshot is not an observed fact at request time.
+        // Compare instants (not local wall-clock strings) to respect UTC offsets.
+        val requestInstant = runCatching {
+            java.time.OffsetDateTime.parse(request.createdAt).toInstant()
+        }.getOrNull()
+        fun dated(value: String?): Boolean = value != null && requestInstant != null &&
+            runCatching {
+                !java.time.OffsetDateTime.parse(value).toInstant().isAfter(requestInstant)
+            }.getOrDefault(false)
         fun approved(snapshot: RecipeEngine.Snapshot?): Boolean =
             snapshot != null && snapshot.shared && dated(snapshot.asOf) &&
                 !snapshot.source.isNullOrBlank() && snapshot.quality in setOf("CONFIRMED", "SOURCED")
