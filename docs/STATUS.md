@@ -1,34 +1,39 @@
-# Entwicklungsstatus – EG-Rezept-KI
+# Modulstatus – EG-Rezept-KI
 
-**Stand:** 31.10.2026. **Status: PARTIAL_READY**, ausdrücklich **nicht** `READY_FOR_INTEGRATION` oder `INTEGRATED`.
+**Datum:** 31.10.2026, Berlin. **Status: PARTIAL_READY** (nachgewiesen ausführbarer, integrierbarer Offline-Kern; *noch keine* überprüfte freie LLM-/On-Device-KI-Generierung). `INTEGRATED` kann nur Codex nach echtem Android-App-Test setzen. Die fertig getestete Offline-Komponente ist ein **eigenständig nutzbarer Kandidaten-Generator**; es wird keine generative KI-Hardwareverfügbarkeit behauptet.
 
-## Source of truth und Fortschritt
+## Neuester nachgewiesener Zustand
 
-- Gemeinsame Architektur gelesen: `EG-Architecture@d22862739bd0e3ef8451ce029e54f7c33ee53e40`, Vertrag `1.0.0-draft`.
-- Eigenrepo bei Arbeitsbeginn ohne Implementierung; Kotlin-Generator, Validator, Nährwertrechner und JSON-Ausgabe wurden implementiert. Die **identischen** Kotlin-Quellen und Regressionstests liegen checksummengeschützt in `transfer/bundle.part1.b64` und `bundle.part2.b64`. `scripts/restore_sources.py` rekonstruiert sie als Klartext und prüft SHA-256.
-- Lokal ausgeführt: `kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/test/kotlin/de/eg/recipe/RecipeEngineTest.kt -include-runtime -d build/tests.jar && java -ea -jar build/tests.jar`, **47 passed, 0 failed**, Kotlin 1.9.0 / JVM 21, nur synthetische Fixtures.
-- Zweite Reproduktionsprüfung: Quellcode aus Archiv gelöscht, mit `python scripts/restore_sources.py` rekonstruiert, Dateiprüfsummen unverändert, erneut **47 passed / 0 failed**.
-- Demo: `kotlinc ... examples/Demo.kt -include-runtime -d build/demo.jar && java -jar build/demo.jar`: Ausgabe syntaktisch gültiges JSON (`python -m json.tool`).
-- GitHub CI `.github/workflows/offline-tests.yml` angelegt; **CI-Ergebnis in diesem Status noch nicht verifiziert**.
-- Haupt-App: GitHub-Leseversuch mit `Ernaerungsgedaechtnis` ergab 404 in dieser Verbindung; Architekturdokumente als Integrationskontext benutzt. Keine Fremd-Repositories verändert.
+- Einzige Schreibablage `ecora2003-max/EG-Rezept-KI`. Keine fremden Repository-/Produktivdatenänderungen.
+- Kanonische Architektur `EG-Architecture@d22862739bd0e3ef8451ce029e54f7c33ee53e40`; Vertrag `1.0.0-draft`, weiterhin Vertragsentwurf.
+- **CI-Beleg:** [GitHub Actions Run 41220695779](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41220695779), Commit `c66d7be437a47af052cd3af878ff06fc3ca0b250`, **completed/success**, Kotlin 1.9.25/JDK17, Python 3.11. **65/65 echte Offline-JVM-Funktionstests**, 0 Fehler, 0 Skip; **2/2 JSON-Schema-2020-12-Positivfälle und 16/16 bewusst defekte Fälle** bestanden.
+- Befehle: `python3 -m pip install brotli==1.1.0 && bash scripts/test.sh`; CI zusätzlich `python3 -m pip install jsonschema==4.26.0` und `python3 scripts/full_contract_check.py build/recipe-draft.json build/contract.schema.json` sowie dasselbe für `build/smart-draft.json`.
+- Original-Kotlin-Kern und 47 Tests liegen unverändert SHA-256-validiert als Quellarchiv `transfer/bundle.part1.b64`/`bundle.part2.b64` (Prüfsumme `a5c53a77dfdf74d0cfc6497db5f415cf2abb0a32e7a3a0363ca2dc9f59581838`). `scripts/restore_sources.py` extrahiert genau zwei Klartext-Kotlin-Dateien; CI prüft diese tatsächlich.
+- Weitere Kotlin-Quellen direkt im Repo: `CombinatorialGenerator.kt` (**27 verschiedene synthetische Gerichte**), `GoalAwareRecipePlanner.kt` (standardmäßig 14 Hauptgerichte; Zielsortierung nur nach bestätigten Nährstoffbereichen) sowie 18 ergänzende Tests und 2 Demos.
+- Main-App `ecora2003-max/Ernaerungsgedaechtnis`: Lesen via GitHub-Verbindung gab 404; Integration nur als klare Adapteranforderung nach gelesener Architektur dokumentiert, kein ungerechtfertigter App-Test behauptet.
 
-## Nachgewiesene Tests
+## Bestehende Funktionsabnahme (offline verifiziert)
 
-47 Tests decken alle acht Flagkombinationen samt Nichtbeeinflussung bei deaktiviertem Flag, Snapshots fehlend/unsicher, bestätigte und unbekannte Allergene, unbekannte und widersprüchliche Ernährungseinschränkungen, Food-Verbote, unterschiedliche Roh-/Garmengen, 2/4-Portionen, Null-/Negativmengen, Long-Überlauf, Vit-D/B12-Lücken, veraltete Angebote, Best-before-Prüfung, geplanten Einkauf ≠ Bestand, Budgetlücke, Meal-Prep-Freezerlücke, unbestätigte Targets, externe untrusted Generatoren, Offline-Purity und keinerlei Produktions-/Verzehrbuchung ab.
+1. Rezeptentwürfe mit Rohzutatenmengen, Mengenbasis, Zubereitungsschritten, Geräten, Portionen, Mahlzeiten und Meal-Prep-Metadaten.
+2. Austauschbare Generatoren und separater deterministischer Validator/Nährwertrechner, nur dokumentierte Fakten (fehlend ≠ 0), begrenzte Nutzung von `BigDecimal`.
+3. Drei unabhängige Flags in allen acht Kombinationen, ausgeschaltete Kontexte ohne Einfluss; angeforderte unbekannte Snapshots explizit gemeldet.
+4. Bestätigte/unklare Allergene und Ernährungsverbote, Roh-/Garkonflikte, falsche Einheiten/Mengen, bekannt/fehlendes Vitamin D/B12, Zeit/Geräte, begrenzte Gefrierkapazität, MHD und Angebotsdatum.
+5. Einkaufsliste ≠ gekauft; Vorschlag ≠ Kochen ≠ Verzehr. Keine Schreiboperation für App-/Room-/Sheet-Bestände.
+6. Vollständige, gepinnte Schema-2020-12-Validierung für beide Beispielrezepte mit negativer Mutationstestmatrix. Details [TEST_REPORT](TEST_REPORT.md).
 
-## Offene Gates (nicht kaschieren)
+## Noch offen / Gate gegen unberechtigte Vollfreigabe
 
-1. **Vollständige JSON-Schema-2020-12-Validierung** aller echten `recipe.draft`-Beispielnachrichten direkt gegen die aktuell gepinnte Architekturdatei, inklusive negativer Fälle. Die eingebaute Python-Prüfung ist nur eine **strukturelle** Kontrolle.
-2. **Verifizierter GitHub-CI-Lauf** sowie Code- und Archivzuordnung auf GitHub (SHA-256).
-3. Main-App-Integration durch Codex, Datentransformation aus tatsächlichem lokalen App-Modell und echte Android-Gerätetests.
-4. Offline-Template-Auswahl bisher drei Beispielgerichte; kein freies Sprachmodell. On-Device-LLM nur technische Option und mit Laufzeit-Verfügbarkeitsprüfung, nicht als nutzbare Implementierung ausgegeben.
-5. Sicherheitsgrenzen: Allergenkreuzkontakte, unbestätigte Nährwertquellen, Kühlkette/Haltbarkeit und echte Rezeptkosten nicht autonom abschließend nachweisbar.
+- Tatsächliche **LLM-basierte KI-Generierung** auf einem konkret unterstützten Android-Gerät samt Runtime-Status, Datenschutzfreigabe, syntaktischem Input-Adapter und Revalidierung; nicht als kostenlos verfügbar auf allen Geräten voraussetzen. Ein rein kombinatorischer Generator ist **kein LLM**.
+- Die Haupt-App konnte in dieser Sitzung nicht über die GitHub-Verbindung eingesehen werden (404), daher kein echtes Room-/Compose-/Geräte-End-to-End und keine Migration verifiziert. Das obliegt Codex.
+- Der vom Architekturteam freizugebende stabile Vertrag `1.0.0` existiert noch nicht; bisherige Nachrichten entsprechen ausschließlich der Draft-Version.
+- Individuelle Lager-/Kühlkettensicherheit, allergene Kreuzkontamination, Haltbarkeit, konkrete Rezeptkosten und reale Nährwert-Quellenrechte können ohne zusätzliche Belege nicht abschließend garantiert werden.
+- Die erste Quellcode-Datei benötigt aktuell einmalige SHA-geprüfte Entpackung. Für reguläres Android-Publishing kann die entpackte `.kt`-Datei durch Codex in das Bibliotheksmodul aufgenommen werden.
 
-## Nächste konkrete Aktionen
+## Nächste Sitzung / Wiederaufnahme
 
-- GitHub-Actions-Ergebnis der CI prüfen; bei fehlender Tooling-/Netzwerkverfügbarkeit CI korrigieren und echte bestandene Runs dokumentieren.
-- Vollschema-Validator gegen gepinnten `contracts/v1/contract.schema.json` hinzufügen und positive/negative Demo-Payloads laufen lassen.
-- Optionalen AI-Adapter nur bei realer Geräteunterstützung und stets unverändertem Validator. Zusätzliche Templates mit belegter Zutaten-/Zubereitungslogik.
-- Nach allen Modulgates Testbericht mit Commit-SHA, Befehlen, Zahlen und Fehlern aktualisieren. Nur nach nachgewiesener Erfüllung `READY_FOR_INTEGRATION`.
+1. Neueste `docs/STATUS.md`, `AGENTS.md`, `docs/ACCEPTANCE.md` und aktuelle Architektur-SHA lesen. Vorherigen Erfolg nicht als Erfolg einer Änderung an neuen Daten/Verträgen ausgeben.
+2. Optionalen **on-device Modelladapter** mit strikt ausgelagerter, dynamisch überprüfter Verfügbarkeit implementieren und rein mit Fake-Modell testen; echte Modellverfügbarkeit nur auf realer Hardware belegen. Oder weitere Offline-Rezeptgrammatiken mit negativen Sicherheits- und Mengenfällen ergänzen.
+3. Test nach jeder Codeänderung: `bash scripts/test.sh`, CI-Schema-Prüfungen; echten Run/Commit und Fehler/Skip hier dokumentieren.
+4. Erst bei nachgewiesenen **allen** noch zutreffenden Abnahmekriterien den Status auf `READY_FOR_INTEGRATION` setzen; weder ohne Vertrags-/Gerätebelege `INTEGRATED` behaupten noch fremde Repositories ändern.
 
-Keine personenbezogenen Daten, echten Bons, Secrets oder produktiven Buchungen verwendet.
+**Benachrichtigung nur bei einer notwendigen Entscheidung, unlösbaren Blockade oder vollständiger Abnahme.** Keine Zwischenmeldungen.
