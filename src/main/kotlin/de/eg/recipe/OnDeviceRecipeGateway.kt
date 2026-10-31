@@ -52,6 +52,9 @@ object OnDeviceRecipeGateway {
             RecipeEngine.propose(sanitized, facts, offline), "OFFLINE_FALLBACK", state, why
         )
         if (model == null) return fallback(Availability.UNAVAILABLE, "NO_MODEL_ADAPTER")
+        // A malformed request time defeats the snapshot evidence cutoff. Never
+        // expose such a request to a local model, even if all flags are enabled.
+        if (requestInstant == null) return fallback(Availability.UNKNOWN, "INVALID_REQUEST_TIMESTAMP")
         val state = try { model.availability() } catch (_: Exception) {
             return fallback(Availability.UNKNOWN, "MODEL_STATUS_ERROR")
         }

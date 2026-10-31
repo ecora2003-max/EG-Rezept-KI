@@ -115,6 +115,17 @@ object OnDeviceRecipeGatewayTest {
         check(sameInstantModel.received!!.stock != null &&
               sameInstantModel.received!!.shopping != null &&
               sameInstantModel.received!!.offers != null)
-        println("SUMMARY on_device_gateway passed=22 failed=0")
+        // An invalid request clock must prevent model calls, regardless of which
+        // optional contexts the user enabled. Offline generation stays available.
+        for (bits in 0..7) {
+            val flags=RecipeEngine.Flags(bits and 1!=0,bits and 2!=0,bits and 4!=0)
+            val invalidModel=Fake()
+            val output=gate.propose(request(flags).copy(createdAt="not-an-offset-timestamp",
+                stock=snapshot, shopping=snapshot, offers=offer),noFacts,invalidModel)
+            check(output.provider == "OFFLINE_FALLBACK" &&
+                  output.fallbackReason == "INVALID_REQUEST_TIMESTAMP" &&
+                  invalidModel.attempts == 0 && invalidModel.received == null)
+        }
+        println("SUMMARY on_device_gateway passed=30 failed=0")
     }
 }
