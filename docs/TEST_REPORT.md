@@ -1,3 +1,17 @@
+# Aktuelle CI-Gesamtabnahme – 31.10.2026 (optimierte JVM-Suite)
+
+**Getesteter Codecommit:** `edd4340e27f89f1b45a9d0f30993789661607f5c`; [GitHub Actions 41228527601](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41228527601), Job `124617639600`, **completed/success**. Alle Testdaten synthetisch.
+
+- **183/183 Kotlin-Funktionstests**, 0 Fehler, 0 Skip: 47 Engine, 10 Kombinationen, 8 Zielplanung, 13 Fake-Modell, 7 Planungshorizonte, 7 Planungssicherheit, 16 Bedarf, 14 Import, 7 Revalidierung, 16 Host-Fake, 24 bounded JSON und **14 neue Host-Mengen-/Versionen-Paritätstests**.
+- **74/74 vollständige JSON-Schema-2020-12-Prüffälle**: zwei gültige `recipe.draft`-Beispiele, 16 erwartungsgemäß zurückgewiesene fehlerhafte Nachrichten und 56 gültige Plandrafts, 0 Fehler/Skip.
+- **1/1 Kotlin-only-JAR-Build** inklusive `AppQuantityBridge.class` und sämtlicher weiteren öffentlichen Klassen erfolgreich. Keine Android-SDK-Abhängigkeit; kein tatsächlicher App-/Gerätebau.
+- **Reproduktion:** `python3 -m pip install brotli==1.1.0 && bash scripts/test.sh`. Der optimierte Skriptlauf stellt Source-Dateien SHA-geprüft wieder her, kompiliert **alle** `src/main/**/*.kt`, `src/test/**/*.kt` und `examples/*.kt` einmal gemeinsam zu `build/offline-all-tests.jar`, führt 12 Test-Mains mit `java -ea -cp build/offline-all-tests.jar de.eg.recipe.<TestMain>` aus, erzeugt drei Demo-JSON-Artefakte und ruft `bash scripts/build_library.sh` auf. Die GitHub CI installiert außerdem `jsonschema==4.26.0` und führt `scripts/full_contract_check.py` je für `build/recipe-draft.json` und `build/smart-draft.json` sowie `scripts/plan_contract_check.py build/meal-plan-drafts.json build/contract.schema.json` gegen die gepinnte v1-Schema-Kopie aus.
+- **Reale Haupt-App wurde jetzt erfolgreich ausschließlich lesend geprüft:** `Ernaerungsgedaechtnis@6ba419ed2875c1988f45afee65e2708e7895cacf`. Deren `BaseUnit` (GRAM/MILLILITRE/PORTION), `Amounts.MAX=1e12`, Tausendstelmengen, konkrete `ProductVersionEntity.id`, `RecipeInput`/`PlanInput` und rein appinterne FoodStore-Schreibgrenzen wurden fachlich mit den synthetischen Porttests verglichen. **Dies ist keine reale Android-/Room-/Compose-Integration.** [Belegtes Mapping](APP_DTO_MAPPING.md).
+
+**Blocker:** Noch kein auf echter Android-Hardware getestetes On-Device-Modell, keine Appseitige Host-JSON-Schema-/Room-/Compose-Integration, keine real bestätigten Zutaten-/Allergen-/Kühlketten-Daten und keine stabile Architekturvertragsfreigabe. Modulstatus weiterhin **PARTIAL_READY/OFFLINE_VERIFIED**, nicht `INTEGRATED`.
+
+---
+
 # Neuester Testnachweis – 31.10.2026, 18:08 UTC
 
 **Code-/Test-Commit** `0f4b3cc34f42be63a1b47a6afbb739dc9df9ecf1` · [GitHub Actions Run 41227672665](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41227672665) · Job `124615113444` · **completed/success**, alle Schritte erfolgreich. Ubuntu / JDK17 / Kotlin1.9.25 / Python3.11, synthetische Testdaten.
