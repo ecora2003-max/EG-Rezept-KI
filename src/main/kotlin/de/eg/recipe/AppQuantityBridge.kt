@@ -19,6 +19,9 @@ object AppQuantityBridge {
         val confirmedPieceMassMilliGrams: Long? = null
     )
     data class Projection(
+        val sourceFoodTypeId: String,
+        val sourceBasis: RecipeEngine.Basis,
+        val sourceState: RecipeEngine.State,
         val productVersionId: String?,
         val unit: HostUnit?,
         val amountMilli: Long?,
@@ -64,6 +67,7 @@ object AppQuantityBridge {
                     ?: run { gaps += Gap.AMOUNT_OVERFLOW; null }
             } catch (_: ArithmeticException) { gaps += Gap.AMOUNT_OVERFLOW; null }
         }
-        return Projection(line.productVersionId?.takeIf { it.isNotBlank() }, unit, milli, gaps)
+        return Projection(line.foodTypeId, q.basis, q.state,
+            line.productVersionId?.takeIf { it.isNotBlank() }, unit, milli, gaps)
     }
 }
