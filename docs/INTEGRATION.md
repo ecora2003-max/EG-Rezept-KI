@@ -55,6 +55,10 @@ val draftJson = result.messages.map(JsonOutput::encode)
 
 `Result.messages` enthält ausschließlich nicht-blockierte **`recipe.draft`-Entwürfe**, Warnungen und `xRecipeKi.verification` (z. B. `REVIEW_REQUIRED`); `Result.rejected` beschreibt blockierte Kandidaten. Unbekannte Allergene bedeuten **nie „allergenfrei“**.
 
+## Nachweisbarer Rücklese- und Revalidierungsport
+
+Die Host-Anwendung dekodiert JSON typgetreu (ganzzahlige Mengen **nicht** in Float umwandeln) und prüft den vollständigen `1.0.0-draft`-Vertrag. Danach übernimmt `RecipeDraftImport.read(parsedMap)` die streng typisierte, **stets unbestätigte** Darstellung des Entwurfs. `RecipeDraftRevalidation.revalidate(parsedMap, currentRequest, facts, confirmedStates)` prüft anschließend mit dem bestehenden deterministischen Validator erneut Allergene, Verbote, Portionen, Mengenbasis und bezeugte Nährwerte. Fehlende Lebensmittelidentitäten werden vor der Prüfung zurückgewiesen; Quellbehauptungen zu Roh-/Gargewicht, Nährwerten und `xRecipeKi.verification` werden nicht als Belege übernommen. Neue `REVIEW_REQUIRED`-Nachrichten bleiben ohne FoodStore-/Kitchen-Seiteneffekte. Die Read-/Revalidation-Portdateien sind `src/main/kotlin/de/eg/recipe/RecipeDraftImport.kt` und `RecipeDraftRevalidation.kt`; vollständige Dokumentation [IMPORT.md](IMPORT.md). Keine Android-App-/Geräteintegration behauptet.
+
 ## Eingangs- und Ausgangs-Ports
 
 - `OnDeviceRecipeGateway.propose(request, facts, model, offline)` kapselt **optionale lokale** Modelle. Vor Aufruf prüft der Host tatsächliche Android-Statusverfügbarkeit (kein Gerät angenommen); der Gateway entfernt inaktive und nicht freigegebene Stock-/Shopping-/Offer-Snapshots **vor der Modellübergabe**, begrenzt Modellergebnisse auf 32 Kandidaten, revalidiert alles über `ProvidedCandidates`, verwirft blockierte Vorschläge und fällt bei nicht verfügbarem/fehlerhaftem Modell deterministisch offline zurück. `LOCAL_UNTRUSTED_MODEL` ist nie eine Sicherheitsfreigabe. 13 Tests mit Fake-Modell sind nachgewiesen, **kein echter ML-Kit/AICore-Test**.
