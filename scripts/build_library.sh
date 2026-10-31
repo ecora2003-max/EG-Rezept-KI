@@ -13,6 +13,7 @@ kotlinc \
   src/main/kotlin/de/eg/recipe/RecipeDraftImport.kt \
   src/main/kotlin/de/eg/recipe/RecipeDraftRevalidation.kt \
   src/main/kotlin/de/eg/recipe/BoundedDraftJson.kt \
+  src/main/kotlin/de/eg/recipe/AppQuantityBridge.kt \
   src/main/kotlin/de/eg/recipe/MealPlanDraftPlanner.kt \
   src/main/kotlin/de/eg/recipe/MealPlanBuild.kt \
   src/main/kotlin/de/eg/recipe/MealPlanView.kt \
@@ -25,6 +26,7 @@ with zipfile.ZipFile('build/eg-rezept-ki-core.jar') as jar:
     for item in (
         'de/eg/recipe/RecipeEngine.class',
         'de/eg/recipe/BoundedDraftJson.class',
+        'de/eg/recipe/AppQuantityBridge.class',
         'de/eg/recipe/RecipeDraftImport.class',
         'de/eg/recipe/RecipeDraftRevalidation.class',
         'de/eg/recipe/AndroidLocalModelAdapter.class',
