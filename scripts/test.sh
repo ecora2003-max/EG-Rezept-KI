@@ -33,3 +33,5 @@ java -ea -cp build/android-local-adapter-tests.jar de.eg.recipe.AndroidLocalMode
 
 kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/main/kotlin/de/eg/recipe/RecipeDraftImport.kt src/main/kotlin/de/eg/recipe/RecipeDraftRevalidation.kt src/main/kotlin/de/eg/recipe/BoundedDraftJson.kt src/test/kotlin/de/eg/recipe/BoundedDraftJsonTest.kt -include-runtime -d build/bounded-draft-json-tests.jar
 java -ea -cp build/bounded-draft-json-tests.jar de.eg.recipe.BoundedDraftJsonTest
+
+bash scripts/build_library.sh
