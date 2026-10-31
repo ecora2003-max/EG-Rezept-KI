@@ -30,3 +30,6 @@ kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/main/kotlin/de/eg/recip
 java -ea -cp build/recipe-revalidation-tests.jar de.eg.recipe.RecipeDraftRevalidationTest
 kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/main/kotlin/de/eg/recipe/CombinatorialGenerator.kt src/main/kotlin/de/eg/recipe/OnDeviceRecipeGateway.kt src/main/kotlin/de/eg/recipe/AndroidLocalModelAdapter.kt src/test/kotlin/de/eg/recipe/AndroidLocalModelAdapterTest.kt -include-runtime -d build/android-local-adapter-tests.jar
 java -ea -cp build/android-local-adapter-tests.jar de.eg.recipe.AndroidLocalModelAdapterTest
+
+kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/main/kotlin/de/eg/recipe/RecipeDraftImport.kt src/main/kotlin/de/eg/recipe/RecipeDraftRevalidation.kt src/main/kotlin/de/eg/recipe/BoundedDraftJson.kt src/test/kotlin/de/eg/recipe/BoundedDraftJsonTest.kt -include-runtime -d build/bounded-draft-json-tests.jar
+java -ea -cp build/bounded-draft-json-tests.jar de.eg.recipe.BoundedDraftJsonTest
