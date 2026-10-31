@@ -75,6 +75,22 @@ object OnDeviceRecipeGatewayTest {
             check((received.shopping != null)==flags.considerShopping)
             check((received.offers != null)==flags.considerOffers)
         }
-        println("SUMMARY on_device_gateway passed=11 failed=0")
+        val unsharedModel=Fake()
+        gate.propose(request(RecipeEngine.Flags(true,true,true)).copy(
+            stock=snapshot.copy(shared=false),
+            shopping=snapshot.copy(asOf=null),
+            offers=offer.copy(shared=false)),noFacts,unsharedModel)
+        check(unsharedModel.received!!.stock == null &&
+              unsharedModel.received!!.shopping == null &&
+              unsharedModel.received!!.offers == null)
+        val undated=Fake()
+        gate.propose(request(RecipeEngine.Flags(true,true,true)).copy(
+            stock=snapshot.copy(quality="UNKNOWN"),
+            shopping=snapshot.copy(source=null),
+            offers=offer.copy(asOf="nonsense")),noFacts,undated)
+        check(undated.received!!.stock == null &&
+              undated.received!!.shopping == null &&
+              undated.received!!.offers == null)
+        println("SUMMARY on_device_gateway passed=13 failed=0")
     }
 }
