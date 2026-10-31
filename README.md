@@ -27,7 +27,7 @@ bash scripts/test.sh
 
 Der Runner stellt die beiden Quellen aus `transfer/bundle.part1.b64` und `bundle.part2.b64` wieder her, prüft ihre Prüfsumme, kompiliert sie mit Kotlin, führt **129 Regressionstests** aus und kontrolliert beide synthetischen Demo-Vertragsnachrichten auf grundlegende Gültigkeit. Vollständige Draft-2020-12-Validierung mit **2 gültigen und 16 bewusst fehlerhaften Nachrichten sowie 56 Plan-Rezepten** Nachrichten läuft zusätzlich im [GitHub-Actions-Workflow](.github/workflows/offline-tests.yml) gegen den gepinnten Architekturvertrag.
 
-**Verifizierter Build:** [Run 41224635664](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41224635664), Commit `e50a6c3a6eedf1417818285a895786f290616625`, **129/129 Tests erfolgreich**, vollständige JSON-Schema-Prüfungen bestanden.
+**Verifizierter Build:** [Run 41228527601](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41228527601), Commit `edd4340e27f89f1b45a9d0f30993789661607f5c`, **183/183 Tests erfolgreich**, vollständige JSON-Schema-Prüfungen bestanden.
 
 ## Strikter, begrenzter JSON-Import
 
