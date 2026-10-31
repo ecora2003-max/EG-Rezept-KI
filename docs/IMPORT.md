@@ -5,7 +5,7 @@
 Die Haupt-App muss einen Rezeptentwurf **wieder einlesen** können, ohne selbst erklärte KI-Sicherheit oder bereits erfolgtes Kochen zu übernehmen. Der hier implementierte Port arbeitet offline, rein lesend und ohne Android-/JSON-Bibliotheksabhängigkeit:
 
 1. `JsonOutput.encode(contractMap)` erzeugt versioniertes JSON aus einem geprüften Kotlin-Vorschlag.
-2. Der **Android-Host** dekodiert JSON in gewöhnliche verschachtelte `Map<String, Any?>`/`List`-Strukturen; dabei ganzzahlige Mengen als `Int`, `Long` oder `BigInteger` und niemals automatisch als `Double` erzeugen. Für komplette Schema-Validierung `contracts/v1/contract.schema.json` (Draft 2020-12) vor Auswertung prüfen.
+2. `BoundedDraftJson.decode(json)` ist jetzt ein **optionaler, reiner Kotlin-JSON-Decoder** mit strikten Limits (262.144 Zeichen, 32 Schachtelungsebenen, 10.000 JSON-Werte, 32.768 Zeichen je String). Er erhält ganzzahlige Mengen als `Int`, `Long` oder `BigInteger` und Dezimalzahlen exakt als `BigDecimal`; Dubletten-Keys, unpaarige Unicode-Surrogate, ungültige Escapes, nicht endliche bzw. exzessive Zahlen, unerwartete nachgestellte Daten und fehlende Trennzeichen werden abgewiesen. Das ersetzt **keine vollständige JSON-Schema-2020-12-Prüfung**, die der Host vor Übernahme gegen `contracts/v1/contract.schema.json` durchführen muss.
 3. `RecipeDraftImport.read(parsedMap)` ist eine deterministische **zusätzliche semantische Eingabeprüfung**, keine vollständige JSON-Schema-Engine. Erfordert korrekte `contractVersion`, `messageType`, `meta`, `DRAFT`, drei boolesche Kontextflags, passende Einheit/Mengenbasis, Zutaten, Schritte, Quellenstatus und Not-Booked-Invarianten. Fehlende Menge bleibt `null`; `0` wird nicht als fehlend interpretiert.
 4. `RecipeDraftRevalidation.revalidate(parsedMap, currentRequest, confirmedFacts, confirmedStates)` führt zusätzlich **die vorhandene deterministische Allergen-/Verbots-/Nährstoff-/Mengenprüfung** des `RecipeEngine` aus. Ohne eindeutig bekannte `foodTypeId` wird abgelehnt. Widersprüchliche Opt-ins oder Portionen werden nicht still korrigiert. Bestätigte Roh-/Gargewichte stammen ausschließlich aus gesondertem Hostbeleg (`confirmedStates`), nicht aus `quantity.notes` oder Modellaussagen.
 5. Ergebnis `RecipeEngine.Result.messages` bleibt bei unblocked Imports mindestens `REVIEW_REQUIRED` mit `UNTRUSTED_PROVIDED`; bekannte bestätigte Allergenkonflikte erscheinen in `Result.rejected`. **Auch ein `suppliedVerificationClaim=STRUCTURALLY_VALID` der Eingangsdatei ist nie ein Sicherheitsnachweis.**
@@ -14,9 +14,9 @@ Die Haupt-App muss einen Rezeptentwurf **wieder einlesen** können, ohne selbst 
 ## Android-Beispiel (synthetische Eingabe, kein produktives Profil)
 
 ```kotlin
-// JSON Parsing gehört zum Host: parsed ist Map<String, Any?> mit Integern,
-// Booleans und Listen in den richtigen Typen; kein ungeprüftes .toString().
-val parsed: Map<String, Any?> = parsedRecipeDraftFromHostJson
+// Alternativ zu einem Host-Parser: begrenzter, exakter Kotlin-Decoder.
+val parsed: Map<String, Any?> = BoundedDraftJson.decode(jsonFromHost)
+// Zusätzlich vollständige Vertragsprüfung via Host-Schema-Validator.
 val imported = RecipeDraftImport.read(parsed)
 check(imported.requiresIndependentValidation)
 
@@ -35,7 +35,7 @@ Die App muss die **neu validierte** Entwurfsnachricht verwenden, nicht ungeprüf
 
 ## Bekannte Grenzen
 
-- Kotlin-Map-Reader ersetzt weder einen **vollständigen JSON-Decoder** noch den JSON-Schema-Validator. Der Host muss strikte JSON-Format- und Datenmengenlimits anwenden. Unsupported Datentypen werden zurückgewiesen.
+- Der neue `BoundedDraftJson` ist ein **vollständiger, bewusst begrenzter JSON-Textdecoder**, aber **kein vollständiger JSON-Schema-Validator**. Die oben genannten Limits dürfen vom Host nur innerhalb der festgelegten erlaubten Maxima angepasst werden. Eine gültige JSON-Struktur beweist weder gültige Recipe-Draft-Fachsemantik noch Datenechtheit.
 - Die Importstruktur enthält unbekannte optionale Namespaced-Extensions nur als nicht interpretierte Inputdaten. Pflichtfelder und Flags werden typstreng geprüft.
 - Für importierte Zutaten ohne explizit hostbestätigten Roh-/Garzustand bleibt `State.UNKNOWN`, dadurch keine irreführend vollständige Nährwertberechnung.
 - Unbestätigte oder fremde Mengennachweise werden nicht in bestätigte neue Mengen umgewandelt. Ein `quantity.confirmed` der Quelle ist nur eine *Behauptung*, kein Nachweis.
@@ -44,4 +44,4 @@ Die App muss die **neu validierte** Entwurfsnachricht verwenden, nicht ungeprüf
 
 ## Verifikation
 
-`bash scripts/test.sh` kompiliert die Quellen aus `src/main/kotlin/de/eg/recipe/RecipeDraftImport.kt` und `RecipeDraftRevalidation.kt`, führt `RecipeDraftImportTest` (**14 Fälle**) und `RecipeDraftRevalidationTest` (**7 Fälle**) offline mit synthetischen Fixtures und `java -ea` aus. Vollständige positive/negative JSON-Schema-Prüfung bleibt Teil des GitHub-CI-Workflows. Keine echten Gesundheits-, Einkaufs- oder Vorratsdaten.
+`bash scripts/test.sh` kompiliert die Quellen aus `src/main/kotlin/de/eg/recipe/RecipeDraftImport.kt` und `RecipeDraftRevalidation.kt`, führt `RecipeDraftImportTest` (**14 Fälle**) und `RecipeDraftRevalidationTest` (**7 Fälle**) sowie `BoundedDraftJsonTest` (**24 Fälle** inklusive JSON-Text-Roundtrip, 8 Flags, Duplikat-Keys, Surrogat-/Zahlen- und Ressourcenfehler) offline mit synthetischen Fixtures und `java -ea` aus. Vollständige positive/negative JSON-Schema-Prüfung bleibt Teil des GitHub-CI-Workflows. Keine echten Gesundheits-, Einkaufs- oder Vorratsdaten.
