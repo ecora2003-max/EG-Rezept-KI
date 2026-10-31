@@ -1,39 +1,32 @@
-# EG-Rezept-KI — offlinefähiger Kotlin-Rezeptentwurfs-Kern
+# EG-Rezept-KI — unabhängige, offlinefähige Rezeptgenerierung
 
-**Stand: PARTIAL_READY, nicht in der Haupt-App integriert.** Arbeitsrepo für Chat 5. Ausschließlich [EG-Architecture](https://github.com/ecora2003-max/EG-Architecture) definiert die gemeinsamen Fachverträge; hier wird **nur** die Zulieferkomponente entwickelt.
+**Modulstatus:** `PARTIAL_READY` (ausführbarer Offline-Fachkern geprüft; freie neuronale KI-Generierung und Android-Geräteintegration noch nicht nachgewiesen). Dieses Repository liefert ausschließlich **Rezeptentwürfe** für die Android-App Ernährungsgedächtnis. Die gemeinsame semantische Vertragsquelle ist [EG-Architecture](https://github.com/ecora2003-max/EG-Architecture) `1.0.0-draft`. Die produktiven Rezept-, Lager- und Verzehrdatenbanken werden weder ersetzt noch beschrieben.
 
-## Funktion
+## Leistungsumfang
 
-- **Reiner Kotlin/JVM-Fachkern** ohne Android-SDK, Server, API-Schlüssel, Netzwerkzugriffe, Datenbank oder persistente Seiteneffekte.
-- Austauschbare `RecipeCandidateGenerator`-Schnittstelle: deterministische Offline-Templates oder untrusted externe/modelbasierte Kandidaten.
-- Deterministischer `validate`-Port: Portionen, Zutatenmengen, Einheiten, Roh-/Gargewicht, Allergene, ausdrücklich bestätigte Ernährungsbeschränkungen, Zeit, Geräte, Meal-Prep- und Sicherheitslücken. Blockierende Konflikte werden verworfen; unbewiesene Sicherheit erhält `REVIEW_REQUIRED`.
-- `estimateNutrition`: pro Zutat bekannte quellenbelegte Werte je 100 g/ml, `BigDecimal`-Summen und Portionierung; unbekannte Nährstoffe bleiben `null`, bekannte Teilsummen getrennt.
-- Drei *unabhängige* Flags `considerStock`, `considerShopping`, `considerOffers`; nur freigegebene datierte Snapshots, niemals Room/Google-Sheets-Zugriff. Einkauf geplant ≠ Vorrat.
-- `recipe.draft` gemäß `1.0.0-draft` mit `xRecipeKi`-Extension; keine Buchung von Kochen, Einkaufen oder Verzehr.
+- `RecipeEngine`: austauschbarer `RecipeCandidateGenerator`, deterministischer `validate`-Port, exakter `estimateNutrition`-Rechner auf Basis belegter pro-100g/ml-Nährwerte, `recipe.draft`-JSON-Serialisierung.
+- `CombinatorialGenerator`: **27 unterschiedliche** zulässige Grundkombinationen aus Getreide, bereits gegarten Hülsenfrüchten und Gemüse, mit individuell ausgewiesenen Einheiten, Roh-/Gargewichten und Zubereitungsschritten. Keine Behauptung über individuelle Verträglichkeit.
+- `HybridGenerator`: zwei feste Hauptgerichte plus standardmäßig zwölf kombinatorisch erzeugte Hauptgerichte; `GoalAwareRecipePlanner` sortiert diese nach **ausschließlich bestätigten** Nährstoffzielen und dokumentiert unbekannte Zielerfüllung.
+- `RecipeEngine.OfflineGenerator`: drei feste Basisgerichte, darunter Frühstück. `ProvidedCandidates`: gesonderter Input-Port für **unvertrauenswürdige** Modellvorschläge, die immer durch denselben Validator laufen.
+- Drei **unabhängige** Optionen `considerStock`, `considerShopping`, `considerOffers`. Ausschließlich explizit übergebene, entsprechend qualifizierte und datierte Snapshots werden gelesen. Einkaufsliste ist kein Bestand; abgelaufenes Angebot ist kein gültiger Preis.
+- Bestätigte Allergene, Ernährungseinschränkungen und explizit gesperrte Lebensmittel werden geprüft; unbekannte Sicherheit bleibt `REVIEW_REQUIRED`. Menge, Nährstoff, Haltbarkeit und Lagerplatz werden niemals erfunden.
+- Meal Prep rechnet Rohzutaten nur auf die **gesamte geplante Portionenzahl**, mit eingefrorenen Portionen als Planung; `rawIngredientsCharged=false`, `preparedPortionsCreated=false`, `consumptionRecorded=false`. Keine Buchung erfolgt.
 
-## Lokale Reproduktion
+## Ohne Server, API-Schlüssel oder Bezahldienst testen
 
-Das Modul wird aus technischen Übertragungsgründen im Repository als **SHA-256-geprüftes, quelloffenes Kotlin-Archiv** in `transfer/bundle.part*.b64` transportiert. `scripts/restore_sources.py` stellt die zwei lesbaren Dateien unter `src/main/kotlin/...` bzw. `src/test/kotlin/...` wieder her. Die Archivierung enthält kein Binärprogramm und keinen geheimen Quellcode.
-
-Voraussetzung: Java/JDK 17+, `kotlinc` 1.9+, Python 3 und einmalig das kostenlose Python-Paket `brotli` (nur für das Entpacken).
+Der Kern benötigt lediglich JDK 17+, Kotlin-Compiler 1.9+, Python 3. Die ursprüngliche Kern-Quelldatei und ihr 47-Test-Treiber werden in diesem Repository aus einem **SHA-256-validierten komprimierten Quellarchiv** wiederhergestellt; die weiteren Generatoren, Tests und Beispiele liegen direkt im Repo als lesbare `.kt`-Dateien. Zur einmaligen Wiederherstellung wird das freie Python-Paket `brotli==1.1.0` benötigt, **nicht** für die Kotlin-Runtime.
 
 ```bash
 python3 -m pip install brotli==1.1.0
 bash scripts/test.sh
 ```
 
-Das Skript entpackt prüfsummengeschützt, kompiliert Generator+Tests, startet **47 Offline-Regressionstests** mit aktivierten JVM-`assert`s, führt ein Demo-Rezept aus, serialisiert JSON und überprüft dessen Pflichtstruktur. Bei jedem Fehler bricht es mit Nichtnullstatus ab. Keine Live-API oder personenbezogene Daten erforderlich.
+Der Runner stellt die beiden Quellen aus `transfer/bundle.part1.b64` und `bundle.part2.b64` wieder her, prüft ihre Prüfsumme, kompiliert sie mit Kotlin, führt **65 Regressionstests** aus und kontrolliert beide synthetischen Demo-Vertragsnachrichten auf grundlegende Gültigkeit. Vollständige Draft-2020-12-Validierung mit **2 gültigen und 16 bewusst fehlerhaften** Nachrichten läuft zusätzlich im [GitHub-Actions-Workflow](.github/workflows/offline-tests.yml) gegen den gepinnten Architekturvertrag.
 
-Manuell:
+**Verifizierter Build:** [Run 41220695779](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41220695779), Commit `c66d7be437a47af052cd3af878ff06fc3ca0b250`, **65/65 Tests erfolgreich**, vollständige JSON-Schema-Prüfungen bestanden.
 
-```bash
-python3 scripts/restore_sources.py
-kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt examples/Demo.kt -include-runtime -d build/demo.jar
-java -jar build/demo.jar
-```
+## Android und Einschränkungen
 
-## Reifegrad und Grenzen
+Codex übernimmt die reinen Kotlin-Quelldateien in das bestehende Android-/JVM-Source-Set, liefert optional Snapshots aus vorhandenen Room-Schnittstellen **read-only** und lässt alle Entwürfe vor einer expliziten Nutzerentscheidung prüfen. Keine neue Datenbank, kein Server und keine Änderung der Haupt-App sind Teil dieses Repositories. Empfohlenes Entry Point: `GoalAwareRecipePlanner.propose(request, facts)`; siehe [Integration](docs/INTEGRATION.md) und [SmartDemo](examples/SmartDemo.kt).
 
-Automatisierte CI: `.github/workflows/offline-tests.yml`. **Volle JSON-Schema-Draft-2020-12-Validierung gegen die Architekturdatei und echte Android-App-/Gerätetests sind gesonderte Gates**, nicht durch die Basisstrukturprüfung ersetzt. Ohne bestätigte Produkt-/Allergendaten ist eine Verträglichkeitszusage unzulässig. Offline-Templates sind begrenzt (aktuell drei), keine freie generative KI; ein On-Device-Modell ist optional und derzeit **nicht implementiert**.
-
-Vollständige Schnittstelle: [Integration](docs/INTEGRATION.md). Gemessener Fortschritt: [Status](docs/STATUS.md). Testfälle: [Testbericht](docs/TEST_REPORT.md). Optionale KI: [Geräte- und Datenschutzprüfung](docs/ON_DEVICE_AI.md).
+**Nicht behauptet:** frei formulierende LLM-/On-Device-Rezept-KI, Verfügbarkeit von Gemini Nano auf einem konkreten Android-Gerät, reale Room-/Compose-Integration, lückenlose Produkt- oder Allergendaten, Lebensmittelsicherheit bei Kühlung/Kreuzkontakt, verbindliche Kosten oder Ernährungsberatung. Das generative Offline-Verfahren ist regel- und kombinatorikbasiert. [On-device-KI-Prüfung](docs/ON_DEVICE_AI.md) · [Testbericht](docs/TEST_REPORT.md) · [aktueller Status](docs/STATUS.md).
