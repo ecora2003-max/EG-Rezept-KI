@@ -29,6 +29,10 @@ Der Runner stellt die beiden Quellen aus `transfer/bundle.part1.b64` und `bundle
 
 **Verifizierter Build:** [Run 41221248578](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41221248578), Commit `0b429348d409e0fce41c8728b74c1c246fa806e1`, **78/78 Tests erfolgreich**, vollständige JSON-Schema-Prüfungen bestanden.
 
+## Sicheres Wiedereinlesen aus dem Android-Host
+
+`RecipeDraftImport.read(parsedMap)` liest das vertragliche `recipe.draft` als typisierte, **immer unbestätigte** Datenstruktur zurück. `RecipeDraftRevalidation.revalidate(parsedMap, request, facts, confirmedStates)` prüft diese fremden Vorschläge unabhängig mit dem deterministischen Mengen-/Allergen-/Restriktionsvalidator; ein behaupteter `STRUCTURALLY_VALID`-Status oder fremde Nährwerte werden niemals als Vertrauensbeleg übernommen. Fehlerhafte Flags, Mengen, Zustände und Buchungsbehauptungen werden abgewiesen. [Integration und synthetische Regressionen](docs/IMPORT.md).
+
 ## Android und Einschränkungen
 
 Codex übernimmt die reinen Kotlin-Quelldateien in das bestehende Android-/JVM-Source-Set, liefert optional Snapshots aus vorhandenen Room-Schnittstellen **read-only** und lässt alle Entwürfe vor einer expliziten Nutzerentscheidung prüfen. Keine neue Datenbank, kein Server und keine Änderung der Haupt-App sind Teil dieses Repositories. Empfohlenes Entry Point: `GoalAwareRecipePlanner.propose(request, facts)`; siehe [Integration](docs/INTEGRATION.md) und [SmartDemo](examples/SmartDemo.kt).
