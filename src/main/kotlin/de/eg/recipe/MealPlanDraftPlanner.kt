@@ -8,5 +8,7 @@ object MealPlanDraftPlanner {
   data class Occurrence(val id:String,val date:LocalDate,val slot:Slot,val draft:Map<String,Any?>)
   data class IngredientKey(val foodTypeId:String,val unit:String,val basis:String,val preparationState:String)
   data class Demand(val key:IngredientKey,val amount:Long?,val sources:Int,val missingFrom:List<String>)
+  data class Plan(val planId:String,val start:LocalDate,val horizonDays:Int,
+    val occurrences:List<Occurrence>,val unfilled:List<String>,val warnings:List<String>)
   data class View(val planId:String,val firstDay:Int,val days:Int,val occurrences:List<Occurrence>,val demand:List<Demand>)
 }
