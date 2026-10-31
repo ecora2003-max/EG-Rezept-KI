@@ -25,9 +25,15 @@ python3 -m pip install brotli==1.1.0
 bash scripts/test.sh
 ```
 
-Der Runner stellt die beiden Quellen aus `transfer/bundle.part1.b64` und `bundle.part2.b64` wieder her, prüft ihre Prüfsumme, kompiliert sie mit Kotlin, führt **129 Regressionstests** aus und kontrolliert beide synthetischen Demo-Vertragsnachrichten auf grundlegende Gültigkeit. Vollständige Draft-2020-12-Validierung mit **2 gültigen, 16 bewusst fehlerhaften und 56 gültigen Plan-Rezept-** Nachrichten läuft zusätzlich im [GitHub-Actions-Workflow](.github/workflows/offline-tests.yml) gegen den gepinnten Architekturvertrag.
+Der Runner stellt die beiden Quellen aus `transfer/bundle.part1.b64` und `bundle.part2.b64` wieder her, prüft ihre Prüfsumme, kompiliert sie mit Kotlin, führt **129 Regressionstests** aus und kontrolliert beide synthetischen Demo-Vertragsnachrichten auf grundlegende Gültigkeit. Vollständige Draft-2020-12-Validierung mit **2 gültigen und 16 bewusst fehlerhaften Nachrichten sowie 56 Plan-Rezepten** Nachrichten läuft zusätzlich im [GitHub-Actions-Workflow](.github/workflows/offline-tests.yml) gegen den gepinnten Architekturvertrag.
 
 **Verifizierter Build:** [Run 41224635664](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41224635664), Commit `e50a6c3a6eedf1417818285a895786f290616625`, **129/129 Tests erfolgreich**, vollständige JSON-Schema-Prüfungen bestanden.
+
+## Strikter, begrenzter JSON-Import
+
+Mit `BoundedDraftJson.decode(text)` steht ein offlinefähiger Kotlin-Decoder bereit, der direkte `recipe.draft`-Roundtrips ermöglicht, genaue Integer/Decimal-Typen erhält und doppelte JSON-Keys, ungültige Escapes sowie Größen-/Tiefenüberschreitungen ablehnt. `RecipeDraftImport.read` und `RecipeDraftRevalidation.revalidate` interpretieren fremde Sicherheits-/Nährwertbehauptungen ausschließlich als **untrusted**, prüfen mit aktuellen Host-Fakten neu und erzeugen keine Buchungen. **Die formale vollständige Schema-Prüfung bleibt zusätzlich erforderlich**. [API/Limitierungen](docs/IMPORT.md).
+
+Der Kotlin-Kern lässt sich mit `bash scripts/build_library.sh` in `build/eg-rezept-ki-core.jar` als Bibliotheks-JAR **ohne enthaltene Kotlin-Laufzeit** bauen; die GitHub-CI kompiliert tatsächlich alle öffentlichen Quellen und prüft die enthaltenen Klassen. Android-Gerätetests bleiben ausstehend.
 
 ## Sicheres Wiedereinlesen aus dem Android-Host
 
@@ -38,3 +44,5 @@ Der Runner stellt die beiden Quellen aus `transfer/bundle.part1.b64` und `bundle
 Codex übernimmt die reinen Kotlin-Quelldateien in das bestehende Android-/JVM-Source-Set, liefert optional Snapshots aus vorhandenen Room-Schnittstellen **read-only** und lässt alle Entwürfe vor einer expliziten Nutzerentscheidung prüfen. Keine neue Datenbank, kein Server und keine Änderung der Haupt-App sind Teil dieses Repositories. Empfohlenes Entry Point: `GoalAwareRecipePlanner.propose(request, facts)`; siehe [Integration](docs/INTEGRATION.md) und [SmartDemo](examples/SmartDemo.kt).
 
 **Nicht behauptet:** frei formulierende LLM-/On-Device-Rezept-KI, Verfügbarkeit von Gemini Nano auf einem konkreten Android-Gerät, reale Room-/Compose-Integration, lückenlose Produkt- oder Allergendaten, Lebensmittelsicherheit bei Kühlung/Kreuzkontakt, verbindliche Kosten oder Ernährungsberatung. Das generative Offline-Verfahren ist regel- und kombinatorikbasiert. [On-device-KI-Prüfung](docs/ON_DEVICE_AI.md) · [Testbericht](docs/TEST_REPORT.md) · [aktueller Status](docs/STATUS.md).
+
+[Vertragsauswirkung der Architekturaktualisierung (v1.1-Shopping-Draft)](docs/ARCHITECTURE_IMPACT_20261031.md): Der Rezept-Core verbleibt bei `1.0.0-draft`; kein stiller v1.1-Wechsel.
