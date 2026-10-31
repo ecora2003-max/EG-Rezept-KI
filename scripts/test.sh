@@ -35,3 +35,6 @@ kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/main/kotlin/de/eg/recip
 java -ea -cp build/bounded-draft-json-tests.jar de.eg.recipe.BoundedDraftJsonTest
 
 bash scripts/build_library.sh
+
+kotlinc src/main/kotlin/de/eg/recipe/RecipeEngine.kt src/main/kotlin/de/eg/recipe/AppQuantityBridge.kt src/test/kotlin/de/eg/recipe/AppQuantityBridgeTest.kt -include-runtime -d build/app-quantity-bridge-tests.jar
+java -ea -cp build/app-quantity-bridge-tests.jar de.eg.recipe.AppQuantityBridgeTest
