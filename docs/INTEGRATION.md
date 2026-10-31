@@ -1,6 +1,6 @@
 # Technischer Integrationsvertrag — EG-Rezept-KI
 
-**Unterstützte öffentliche Architekturversion:** `1.0.0-draft`, gelesen aus `EG-Architecture@d22862739bd0e3ef8451ce029e54f7c33ee53e40`, insbesondere `contracts/v1/contract.schema.json`. Der Haupt-App-Adapter darf Schema, Felder und Validierung nicht still ändern. Kein Zugriff auf fremde Schreibrepositories oder produktive Nutzerdaten.
+**Unterstützte öffentliche Architekturversion:** `1.0.0-draft`, gelesen aus `EG-Architecture@25541fc877751f81848ac160cb0d9577cbcf83c8`, insbesondere `contracts/v1/contract.schema.json`. Der Haupt-App-Adapter darf Schema, Felder und Validierung nicht still ändern. Kein Zugriff auf fremde Schreibrepositories oder produktive Nutzerdaten.
 
 ## Build und Integration
 
@@ -90,6 +90,6 @@ Verbotene/geschützte Informationen werden ausschließlich über `confirmed=true
 
 ## Validierung, Releases und offene Gate
 
-Ein reproduzierbarer Kotlin-/Python-Workflow prüft **78 synthetische Offline-Funktionstests** plus zwei gültige und sechzehn defekte JSON-Messages im vollständigen Draft-2020-12-Validator gegen die gepinnte Architekturdatei. [GitHub CI Run 41221248578](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41221248578) erfolgreich. Änderungen am Architekturvertrag erfordern erneute Anpassungs- und Negativtests; das Schema ist als `1.0.0-draft` nicht final freigegeben.
+Ein reproduzierbarer Kotlin-/Python-Workflow prüft **129 synthetische Offline-Funktionstests** plus zwei gültige und sechzehn bewusst fehlerhafte JSON-Messages sowie 56 Plan-Rezepte im vollständigen Draft-2020-12-Validator gegen die gepinnte Architekturdatei. [GitHub CI Run 41224635664](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41224635664) erfolgreich. Änderungen am Architekturvertrag erfordern erneute Anpassungs- und Negativtests; das Schema ist als `1.0.0-draft` nicht final freigegeben.
 
 **Noch nicht umgesetzt:** echte Android-Host-/Room-Integration, Hardware-Tests, on-device LLM. Diese Grenzen nicht als bestandene Tests ausgeben. Keine eigene Rezept-, Einkaufs-, Vorrats-, Charge- oder Verzehrdatenbank.
