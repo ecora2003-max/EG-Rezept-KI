@@ -109,11 +109,11 @@ object AndroidLocalModelAdapterTest {
         for (bits in 0..7) {
             val flags = RecipeEngine.Flags(bits and 1 != 0, bits and 2 != 0, bits and 4 != 0)
             val fake = Fake()
-            val output = port.propose(request(flags).copy(
+            val failure = runCatching { port.propose(request(flags).copy(
                 createdAt = "invalid-timestamp", stock = stock,
-                shopping = stock, offers = offer), facts, approved, fake)
-            verify(output.provider == "OFFLINE_FALLBACK" &&
-                output.fallbackReason == "INVALID_REQUEST_TIMESTAMP" &&
+                shopping = stock, offers = offer), facts, approved, fake) }.exceptionOrNull()
+            verify(failure is IllegalArgumentException &&
+                failure.message == "INVALID_REQUEST_TIMESTAMP" &&
                 fake.statusCalls == 0 && fake.inferCalls == 0 && fake.lastRequest == null)
         }
         println("SUMMARY android_local_model_adapter passed=$passed failed=0 skipped=0")

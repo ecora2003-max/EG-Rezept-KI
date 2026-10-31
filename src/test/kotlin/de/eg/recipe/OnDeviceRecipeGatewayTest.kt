@@ -120,10 +120,11 @@ object OnDeviceRecipeGatewayTest {
         for (bits in 0..7) {
             val flags=RecipeEngine.Flags(bits and 1!=0,bits and 2!=0,bits and 4!=0)
             val invalidModel=Fake()
-            val output=gate.propose(request(flags).copy(createdAt="not-an-offset-timestamp",
-                stock=snapshot, shopping=snapshot, offers=offer),noFacts,invalidModel)
-            check(output.provider == "OFFLINE_FALLBACK" &&
-                  output.fallbackReason == "INVALID_REQUEST_TIMESTAMP" &&
+            val failure=runCatching { gate.propose(request(flags).copy(
+                createdAt="not-an-offset-timestamp", stock=snapshot,
+                shopping=snapshot, offers=offer),noFacts,invalidModel) }.exceptionOrNull()
+            check(failure is IllegalArgumentException &&
+                  failure.message == "INVALID_REQUEST_TIMESTAMP" &&
                   invalidModel.attempts == 0 && invalidModel.received == null)
         }
         println("SUMMARY on_device_gateway passed=30 failed=0")
