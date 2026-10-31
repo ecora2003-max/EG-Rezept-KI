@@ -1,10 +1,10 @@
 # Offline-Fachkern und Vertragsprüfung: gemessener Testbericht
 
-**Datum:** 31.10.2026. **Vertrag:** `EG-Architecture@d22862739bd0e3ef8451ce029e54f7c33ee53e40` (`1.0.0-draft`). **Verifizierter GitHub-Codecommit:** `0b429348d409e0fce41c8728b74c1c246fa806e1`.
+**Datum:** 31.10.2026. **Vertrag:** `EG-Architecture@d22862739bd0e3ef8451ce029e54f7c33ee53e40` (`1.0.0-draft`). **Verifizierter GitHub-Codecommit:** `db481b3b3779b1e6d4c36d7e3d40909f8f699c36`.
 
 ## Reproduzierbarkeit
 
-GitHub Actions [Run 41221248578](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41221248578) ist **completed/success**, einschließlich aller Ausführungsschritte und kompletter JSON-Schema-2020-12-Validierung. Runner: Ubuntu, Temurin JDK 17, Kotlin 1.9.25, Python 3.11, freie `brotli==1.1.0` und `jsonschema==4.26.0`, ausschließlich synthetische Daten.
+GitHub Actions [Run 41223911853](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41223911853) ist **completed/success**, einschließlich aller Ausführungsschritte und kompletter JSON-Schema-2020-12-Validierung. Runner: Ubuntu, Temurin JDK 17, Kotlin 1.9.25, Python 3.11, freie `brotli==1.1.0` und `jsonschema==4.26.0`, ausschließlich synthetische Daten.
 
 ```bash
 python3 -m pip install brotli==1.1.0
@@ -14,6 +14,7 @@ python3 -m pip install jsonschema==4.26.0
 # Pinned: EG-Architecture commit d228627...
 python3 scripts/full_contract_check.py build/recipe-draft.json build/contract.schema.json
 python3 scripts/full_contract_check.py build/smart-draft.json build/contract.schema.json
+python3 scripts/plan_contract_check.py build/meal-plan-drafts.json build/contract.schema.json
 ```
 
 Der Runner prüft zunächst per SHA-256 das Archiv `transfer/bundle.part1.b64` + `bundle.part2.b64` (SHA-256 `a5c53a77dfdf74d0cfc6497db5f415cf2abb0a32e7a3a0363ca2dc9f59581838`), entpackt exakt zwei Kotlin-Quellpfade und kompiliert die Kotlin-Klassen. Die erzeugten Plaintext-Dateien sind keine binäre Laufzeitkomponente.
@@ -26,10 +27,14 @@ Der Runner prüft zunächst per SHA-256 das Archiv `transfer/bundle.part1.b64` +
 | `CombinatorialGeneratorTest` – 27 Gerichte, Mengen und Unabhängigkeit | 10 | 0 | 0 |
 | `GoalAwareRecipePlannerTest` – bestätigte Ziele, Rangfolge, fehlende Daten | 8 | 0 | 0 |
 | `OnDeviceRecipeGatewayTest` – Statusprüfung, kein Snapshot-Leak, Fehlerfallback, Fake-Modell | 13 | 0 | 0 |
+| `MealPlanHorizonTest` – 1/7/56 Tage, Planidentität, No-Side-Effects | 7 | 0 | 0 |
+| `MealPlanSafetyTest` – Einschränkungen, acht Flags, unbekannte Lagerkapazität | 7 | 0 | 0 |
+| `MealPlanDemandTest` – Dubletten-Konflikte, Struktur, Einheiten, Überlauf, Nullmengen | 16 | 0 | 0 |
 | JSON-Schema Draft 2020-12 – zwei positive Nachrichten | 2 | 0 | 0 |
 | JSON-Schema Draft 2020-12 – je acht absichtlich ungültige Nachrichten abgewiesen | 16 | 0 | 0 |
+| JSON-Schema Draft 2020-12 – 56 synthetische Plan-Rezepte | 56 | 0 | 0 |
 
-**78/78 Kotlin-Testfälle und 18/18 vollständige Schema-Prüffälle bestanden**. Zusätzlich zwei einfache Vertragsstrukturprüfungen `scripts/contract_check.py`. CI-Log: `SUMMARY passed=47 failed=0`, `SUMMARY combinatorial_generator passed=10 failed=0`, `SUMMARY goal_aware_planner passed=8 failed=0`, `SUMMARY on_device_gateway passed=13 failed=0`, zweimal `PASS full draft 2020-12 recipe.draft message` und zweimal `PASS 8 malformed messages rejected`. Diese Resultate belegen **keine** getestete Android-App.
+**108/108 Kotlin-Testfälle und 74/74 vollständige Schema-Prüffälle bestanden**. Zusätzlich zwei einfache Vertragsstrukturprüfungen `scripts/contract_check.py`. CI-Log: `SUMMARY passed=47 failed=0`, `SUMMARY combinatorial_generator passed=10 failed=0`, `SUMMARY goal_aware_planner passed=8 failed=0`, `SUMMARY on_device_gateway passed=13 failed=0`, zweimal `PASS full draft 2020-12 recipe.draft message` und zweimal `PASS 8 malformed messages rejected`, `SUMMARY meal_plan_horizon passed=7 failed=0`, `SUMMARY meal_plan_safety passed=7 failed=0`, `SUMMARY meal_plan_demand passed=16 failed=0`, `PASS 56 plan drafts satisfy pinned draft-2020-12 schema`. Diese Resultate belegen **keine** getestete Android-App.
 
 ## Grenz- und Invariantenfälle
 
@@ -41,6 +46,7 @@ Der Runner prüft zunächst per SHA-256 das Archiv `transfer/bundle.part1.b64` +
 - Einkaufsbedarf ist kein bestätigter Kauf/Bestand; Angebote nur mit gültigem Zeitfenster und gültiger Herkunft; MHD ist keine automatische Verderbsbehauptung.
 - Meal-Prep-Einfriermengen, unbekannte/zu kleine Gefrierkapazität, keine fiktive Kühlkettenfreigabe, Rohzutaten nicht doppelt auf Portionen gebucht.
 - Aus `propose` folgen **keine** realen Einkäufe, Vorratsbewegungen, Herstellungen, Rezepteinträge oder Verzehrereignisse.
+- Plan-Bedarf verwirft widersprüchliche Vorkommen mit identischer ID, fehlerhafte Mengenbasis/Einheit und unzulässige Zahltypen **explizit**; fehlende Mengenwerte mit bekannter Basis bleiben unbekannt. Identische Wiederholungen zählen nur einmal, damit keine stille Unterzählung oder doppelte Rohwarenbuchung entsteht.
 
 ## Zusätzlich getesteter Modellgateway
 
