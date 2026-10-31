@@ -93,14 +93,17 @@ object OnDeviceRecipeGatewayTest {
               undated.received!!.offers == null)
         // Future snapshots must never be disclosed to the optional model, even
         // with all three flags enabled and otherwise approved metadata.
-        val futureModel = Fake()
-        gate.propose(request(RecipeEngine.Flags(true,true,true)).copy(
-            stock=snapshot.copy(asOf="2026-10-31T16:00:01Z"),
-            shopping=snapshot.copy(asOf="2026-11-01T17:00:00+01:00"),
-            offers=offer.copy(asOf="2026-10-31T17:00:01+01:00")),noFacts,futureModel)
-        check(futureModel.received!!.stock == null &&
-              futureModel.received!!.shopping == null &&
-              futureModel.received!!.offers == null)
+        for (bits in 0..7) {
+            val flags=RecipeEngine.Flags(bits and 1!=0,bits and 2!=0,bits and 4!=0)
+            val futureModel = Fake()
+            gate.propose(request(flags).copy(
+                stock=snapshot.copy(asOf="2026-10-31T16:00:01Z"),
+                shopping=snapshot.copy(asOf="2026-11-01T17:00:00+01:00"),
+                offers=offer.copy(asOf="2026-10-31T17:00:01+01:00")),noFacts,futureModel)
+            check(futureModel.received!!.stock == null &&
+                  futureModel.received!!.shopping == null &&
+                  futureModel.received!!.offers == null)
+        }
 
         // Equal instants with different offsets remain eligible; do not
         // compare timestamps lexicographically or by local wall-clock time.
@@ -112,6 +115,6 @@ object OnDeviceRecipeGatewayTest {
         check(sameInstantModel.received!!.stock != null &&
               sameInstantModel.received!!.shopping != null &&
               sameInstantModel.received!!.offers != null)
-        println("SUMMARY on_device_gateway passed=15 failed=0")
+        println("SUMMARY on_device_gateway passed=22 failed=0")
     }
 }
