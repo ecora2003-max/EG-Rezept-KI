@@ -1,37 +1,79 @@
-# Integrationsanleitung – Rezept-KI / 1.0.0-draft
+# Technischer Integrationsvertrag — EG-Rezept-KI
 
-## Version und Systemgrenze
+**Unterstützte öffentliche Architekturversion:** `1.0.0-draft`, gelesen aus `EG-Architecture@d22862739bd0e3ef8451ce029e54f7c33ee53e40`, insbesondere `contracts/v1/contract.schema.json`. Der Haupt-App-Adapter darf Schema, Felder und Validierung nicht still ändern. Kein Zugriff auf fremde Schreibrepositories oder produktive Nutzerdaten.
 
-Gelesene Architektur: `ecora2003-max/EG-Architecture@d22862739bd0e3ef8451ce029e54f7c33ee53e40` (`1.0.0-draft`), insbesondere `contracts/v1/contract.schema.json`. Ausgangsmodul bleibt **Entwurfslieferant**. Das private Hauptrepo und alle anderen Module bleiben unberührt. Kotlin-Paket: `de.eg.recipe`. Eine formale vollständige Schema-Gegenprüfung und Codex-Integration fehlen noch; keine Produktionsfreigabe.
+## Build und Integration
 
-## Build und Android
+```bash
+python3 -m pip install brotli==1.1.0
+python3 scripts/restore_sources.py
+bash scripts/test.sh
+```
 
-1. `python3 -m pip install brotli==1.1.0 && python3 scripts/restore_sources.py` stellt zwei Klartext-Kotlin-Dateien aus geprüfter Quelle wieder her.
-2. Nach bestandenen Offline-Tests `src/main/kotlin/de/eg/recipe/RecipeEngine.kt` als **pure Kotlin-Quelldatei** in einen Android-/JVM-Library-Modul-Source-Set aufnehmen oder als Modul übernehmen. Keine Kotlin-spezifische Datenbank bzw. kein DI-Framework erforderlich.
-3. Java 8+-Funktionen `java.time.LocalDate/OffsetDateTime`, `java.math.BigDecimal` und exakte Langzahl-Arithmetik werden verwendet. Empfohlen Android `minSdk 26`; darunter coreLibraryDesugaring und konkrete Geräte-/Regressionstests als Vorbedingung.
-4. Codex liest Snapshots **read-only** über eigene `FoodStore`-/Planungs-Adapter, mappt sie explizit auf `RecipeEngine.Request`, `Snapshot`, `OfferSnapshot` und `RecipeFacts`. Ohne ausdrückliche Flags **keine** Snapshotübergabe.
-5. `RecipeEngine.propose(request, facts, RecipeEngine.OfflineGenerator())` gibt eine geordnete Liste `messages` und `rejected` mit Begründungen zurück. `JsonOutput.encode(message)` erzeugt `recipe.draft`-JSON. Die Haupt-App muss Vertragsversion, eigenes Schema und `xRecipeKi.verification` prüfen, **vor** einer möglichen Nutzerübernahme.
-6. **Kein automatischer Schreibpfad:** Entwurf anzeigen/prüfen; App-Nutzer entscheidet später separat über Rezeptanlage, Kochen und Verzehr via vorhandenen transaktionalen Operationen. Keine direkten Repository-, Room-, Sheet- oder Verbrauchs-Methoden existieren im Engine-Code.
-7. Optional: `ProvidedCandidates(listOf(...))` liefert KI-Kandidaten. **Immer** `propose()` verwenden, nie direkt Roh-KI als Rezept akzeptieren. Untrusted Kandidaten werden mindestens `REVIEW_REQUIRED`. Parser/JSON-zu-Kandidaten-Adapter wäre separat von Codex zu implementieren.
+Nach dieser einmaligen Source-Extraktion in einen sauberen Checkout als **pure Kotlin**-Quelldateien (kein Android SDK, kein Python-Bedarf zur Laufzeit) in ein Kotlin/JVM- oder Android-Bibliotheks-Source-Set aufnehmen:
 
-## Kotlin-API
+- `src/main/kotlin/de/eg/recipe/RecipeEngine.kt`
+- `src/main/kotlin/de/eg/recipe/CombinatorialGenerator.kt`
+- `src/main/kotlin/de/eg/recipe/GoalAwareRecipePlanner.kt`
 
-- `Request`: `requestId`, `createdAt` ISO-Zeit mit Offset, `shoppingDate`, `portions`, `flags`, optionale `mealType`, `maxMinutes`, `equipment`, `restrictions`, `targets`, `preferredFoodTypes`, `budgetCents/budgetConfirmed`, `freezePortions`, `freezerCapacityPortions`, `stock`, `shopping`, `offers`.
-- `Snapshot(shared, coverage, asOf, entries, source, quality)`; nur `shared=true`, Zeit und qualifizierte Herkunft gelten als verfügbar. `OfferSnapshot` mit Preis `priceCents`, Datumsintervall und Herkunft. Die Engine **liest** diese Strukturen nur.
-- `NutrientFact`: `foodTypeId`, `unit`, `basis`, `state` (RAW/COOKED), `per100` als `Map<String, BigDecimal?>`, `allergens`, `allergenEvidence`, `dietTags`, `source`, `dataQuality`. Keine Konversion zwischen g/ml/Stück, trocken/gegart oder NET/DRAINED ohne belegten Adapter.
-- Restriktionen `ALLERGEN:<CODE>`, `DIET:<CODE>`, `FOOD:<foodTypeId>` gelten nur bei `confirmed=true`; unbekannter bestätigter Code wird blockiert. Targets gelten nur bei `confirmed=true`. Keine impliziten persönlichen Zielwerte.
-- Ausgabe `Result.messages` (nur nicht blockierte Entwürfe; Warnungen können eine manuelle Prüfung verlangen), `Result.rejected` (Blockgründe). `DRAFT` entspricht niemals einem `CONFIRMED`-Status.
+Benötigt `java.math.BigDecimal`, `java.time.LocalDate/OffsetDateTime`; `minSdk 26` empfohlen, ansonsten `coreLibraryDesugaring` samt Android-Gerätetests. Keine verpflichtende Server-/Cloud- oder On-Device-AI-Bibliothek. Namen und Datentypen sind vom tatsächlichen Room-Schema entkoppelt.
 
-## Fehlermodelle
+## Beispiel: rein lesender Android-Adapter
 
-- Ungültige Request-IDs, Zeitstempel, Portionen, Zielgrenzen oder Budgets: `IllegalArgumentException` / Parsefehler.
-- Widersprüchliche Mengen, falsche Geräte, bestätigter Allergie-/Food-/Diet-Konflikt: Kandidat verworfen, `BLOCKED` mit Codes.
-- Fehlende Nährwerte, ungesicherte Allergendaten, nicht belegte Geräte/Freezer/Budget: `REVIEW_REQUIRED`; Nährstoff-/Mengenwerte bleiben `null`.
-- Fehlendes ausgewähltes Snapshot: explizite `*_SNAPSHOT_UNAVAILABLE`-Warnung; nicht als leer bekannt.
-- Einkaufsliste ist Zukunftsbedarf und **erhöht nicht** `stockAvailable`. Abgelaufene oder unbelegte Angebote erhalten keinen Angebotsvorteil.
-- Long-Summenüberlauf in Beständen: Wert unbekannt, keine negative/phantom Menge.
-- Modell/API/Netzwerk nicht vorhanden: `OfflineGenerator` als garantierter Fallback.
+```kotlin
+// Im App-Adapter, nach expliziter Nutzeroption und erteilter Datenfreigabe:
+val request = RecipeEngine.Request(
+    requestId = "SYNTHETIC-REQUEST-01",
+    createdAt = "2026-10-31T17:00:00+01:00",
+    shoppingDate = java.time.LocalDate.parse("2026-11-04"),
+    portions = 4,
+    mealType = "MAIN",
+    equipment = setOf("HOB", "POT"),
+    flags = RecipeEngine.Flags(
+        considerStock = true,
+        considerShopping = false,
+        considerOffers = true
+    ),
+    stock = null, // Nur explizit freigegebenes, datiertes StockSnapshot!
+    shopping = null,
+    offers = null
+)
+val facts = RecipeEngine.RecipeFacts(emptyMap()) // Reale Nährwerte nur aus belegten Daten.
+val result = GoalAwareRecipePlanner.propose(request, facts)
+val draftJson = result.messages.map(JsonOutput::encode)
+// NICHT speichern, kochen, Vorrat abbuchen oder Verzehr buchen.
+// Erst Schema und Reviews prüfen, Entwurf zeigen, Nutzer separat bestätigen lassen.
+```
 
-## Quellen und Vertragslücken
+`Result.messages` enthält ausschließlich nicht-blockierte **`recipe.draft`-Entwürfe**, Warnungen und `xRecipeKi.verification` (z. B. `REVIEW_REQUIRED`); `Result.rejected` beschreibt blockierte Kandidaten. Unbekannte Allergene bedeuten **nie „allergenfrei“**.
 
-Keine eingebauten realen Nährwert- oder Allergendaten; der Adapter liefert passende bestätigte Fakten. Die einzige freie Erweiterung im `recipe.draft` ist `xRecipeKi`. Strikte JSON-Schema-2020-12-Validierung ist noch nachzuholen; Datenmodell ist nicht an Room gekuppelt. Kein eigener Plan-, Rezept-, Vorrats- oder Verzehrspeicher.
+## Eingangs- und Ausgangs-Ports
+
+- `RecipeEngine.RecipeCandidateGenerator.generate(request)`: deterministische Offline-Templates oder anderer Kandidatenlieferant.
+- `CombinatorialGenerator(maxCandidates=27)`: 27 Getreide×Hülsenfrucht×Gemüse-Gerichte mit klaren Mengen/Zubereitungsschritten, filterbar nach `mealType` und nach Vorlieben sortierbar.
+- `HybridGenerator(maximumNewRecipes=12)`: standardmäßig 14 Hauptgerichte (2 Basis + 12 Kombinationen); keine Doppelberechnung über die Quelldatenbank.
+- `GoalAwareRecipePlanner.propose(request,facts,maximumCombinations=12)`: bewertet und sortiert die validierten Hybrid-Gerichte nach **bestätigten** Zielbereichen. Nicht bestätigte Ziele werden nie ausgewertet.
+- `RecipeEngine.validate(candidate,request,facts)`: pure deterministische `BLOCKED`, `REVIEW_REQUIRED`, `STRUCTURALLY_VALID`-Prüfung. Nutzer-/ML-Ausgaben immer erst prüfen.
+- `RecipeEngine.estimateNutrition(candidate,facts)`: `BigDecimal`-Summen pro Rezept und Portion, nur kompatible `g/ml`, Roh-/Gargewichte, `NET/DRAINED`, mit Quellennachweis; fehlende Summen bleiben `null`, Teilbeträge und Lücken separat.
+- `RecipeEngine.propose(request,facts,RecipeEngine.ProvidedCandidates(listOf(candidate)))`: KI-Integrationsport, markiert alle fremden Kandidaten mindestens `REVIEW_REQUIRED`. Nicht ungeprüft an App weitergeben.
+- `JsonOutput.encode(message)`: lesbares, versioniertes JSON unter Architekturtyp `recipe.draft`; optionale Zusatzfelder ausschließlich in `payload.xRecipeKi`.
+
+### Inputs
+
+`Request`: `requestId`, Zeitstempel mit Offset, `shoppingDate`, `portions`, `mealType`, `maxMinutes`, `equipment`, `restrictions: List<Restriction(code,confirmed)>`, `targets: List<Target(...,confirmed)>`, `preferredFoodTypes`, optionales bestätigtes Budget, `freezePortions/freezerCapacityPortions`, unabhängige `Flags`, `stock`, `shopping`, `offers`. `InventoryEntry` unterscheidet Food-Type, Menge, Einheit, Basis, Roh/Gargewicht und MHD. `NutrientFact` enthält `foodTypeId`, pro-100g/ml `Map<String,BigDecimal?>`, Einheit, Mengenbasis, Rohzustand, Allergenbelege, Quellen- und Qualitätsstatus.
+
+Verbotene/geschützte Informationen werden ausschließlich über `confirmed=true` für `ALLERGEN:...`, `DIET:...`, `FOOD:...` wirksam. Nicht unterstützte bestätigte Einschränkungen blockieren statt sie zu ignorieren. `StockSnapshot`, `ShoppingSnapshot`, `OfferSnapshot` werden nur bei jeweils aktiviertem Flag gelesen; `false` → kein Einfluss, mit CI-Test über alle 8 Kombinationen. Insbesondere Kaufplanung ≠ bestätigter Bestand.
+
+### Fehler- und Sicherheitsverhalten
+
+- Fehlerhafte Requests (negative Budgets, nicht positive Portionen/Zeitgrenzen, inkonsistente Zielbereiche) führen zu `IllegalArgumentException` oder ISO-Parserfehler.
+- Blockierende Kandidaten: bestätigter Allergen-/Food-/Diet-Konflikt, widersprüchliche Mengen/Einheiten, fehlende Geräte, überschrittenes Zeitlimit, nicht ausreichend bestätigter Gefrierplatz.
+- Überprüfungsbedürftige Kandidaten: unbekannte Allergene, Zutatenmengen, Nährwerte, Zeitbelege, MHD, freezer capacity, Kühlkette und vollständige Kosten; `review` darf nicht als sichere Freigabe ausgelegt werden.
+- Angeforderte aber fehlende/unbestätigte Snapshots: `*_SNAPSHOT_UNAVAILABLE`; kein impliziter Lagerstand `0`.
+- Event-Daten bleiben `rawIngredientsCharged=false`, `preparedPortionsCreated=false`, `consumptionRecorded=false`. Der einzige schreibende Prozess liegt im bestehenden, explizit nutzerbestätigten App-`FoodStore`-Pfad.
+
+## Validierung, Releases und offene Gate
+
+Ein reproduzierbarer Kotlin-/Python-Workflow prüft **65 synthetische Offline-Funktionstests** plus zwei gültige und sechzehn defekte JSON-Messages im vollständigen Draft-2020-12-Validator gegen die gepinnte Architekturdatei. [GitHub CI Run 41220695779](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41220695779) erfolgreich. Änderungen am Architekturvertrag erfordern erneute Anpassungs- und Negativtests; das Schema ist als `1.0.0-draft` nicht final freigegeben.
+
+**Noch nicht umgesetzt:** echte Android-Host-/Room-Integration, Hardware-Tests, on-device LLM. Diese Grenzen nicht als bestandene Tests ausgeben. Keine eigene Rezept-, Einkaufs-, Vorrats-, Charge- oder Verzehrdatenbank.
