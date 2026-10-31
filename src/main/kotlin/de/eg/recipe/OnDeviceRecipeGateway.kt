@@ -29,10 +29,17 @@ object OnDeviceRecipeGateway {
         offline: RecipeEngine.RecipeCandidateGenerator = HybridGenerator()
     ): Output {
         // Preserve independence: disabled inputs must never even reach model code.
+        fun dated(value: String?): Boolean = value != null &&
+            runCatching { java.time.OffsetDateTime.parse(value) }.isSuccess
+        fun approved(snapshot: RecipeEngine.Snapshot?): Boolean =
+            snapshot != null && snapshot.shared && dated(snapshot.asOf) &&
+                !snapshot.source.isNullOrBlank() && snapshot.quality in setOf("CONFIRMED", "SOURCED")
+        fun approved(snapshot: RecipeEngine.OfferSnapshot?): Boolean =
+            snapshot != null && snapshot.shared && dated(snapshot.asOf)
         val sanitized = request.copy(
-            stock = if (request.flags.considerStock) request.stock else null,
-            shopping = if (request.flags.considerShopping) request.shopping else null,
-            offers = if (request.flags.considerOffers) request.offers else null
+            stock = request.stock?.takeIf { request.flags.considerStock && approved(it) },
+            shopping = request.shopping?.takeIf { request.flags.considerShopping && approved(it) },
+            offers = request.offers?.takeIf { request.flags.considerOffers && approved(it) }
         )
         fun fallback(state: Availability, why: String): Output = Output(
             RecipeEngine.propose(sanitized, facts, offline), "OFFLINE_FALLBACK", state, why
