@@ -2,6 +2,10 @@
 
 **Unterstützte öffentliche Architekturversion:** `1.0.0-draft`, gelesen aus `EG-Architecture@25541fc877751f81848ac160cb0d9577cbcf83c8`, insbesondere `contracts/v1/contract.schema.json`. Der Haupt-App-Adapter darf Schema, Felder und Validierung nicht still ändern. Kein Zugriff auf fremde Schreibrepositories oder produktive Nutzerdaten.
 
+## Tatsächlich gelesene Host-Einheiten und Produktversionen
+
+Die Android-Haupt-App wurde bei `Ernaerungsgedaechnis@6ba419ed2875c1988f45afee65e2708e7895cacf` **nur lesend** überprüft. Ihre `BaseUnit`-Werte sind `GRAM`, `MILLILITRE`, `PORTION`; Mengen werden in Tausendsteln mit `Amounts.MAX=1_000_000_000_000L` gespeichert. `AppQuantityBridge.project` projiziert bestätigte g/ml/Portionsmengen exakter und begrenzter Integerarithmetik nach `amountMilli`, bewahrt FoodType/Basis/Rohstatus und verweigert unbelegte Stückumrechnung. Die **konkrete** `ProductVersionEntity.id` muss vom Host separat freigegeben werden. Ohne Nutzerbestätigung weder `FoodStore.saveRecipe` noch `FoodStore.savePlan` noch `FoodStore.produce` aufrufen. [Mapping und abgewiesene Fälle](APP_DTO_MAPPING.md).
+
 ## Kotlin-Bibliotheksbuild und JSON-Wiedereinlesen
 
 Der verifizierte Build `bash scripts/build_library.sh` erzeugt `build/eg-rezept-ki-core.jar` aus allen 12 reinen Kotlin-Moduldateien ohne Fat-JAR und ohne Android-SDK-Abhängigkeit. Für die Android-App die bestehenden Kotlin-Runtime/Desugaring-Anforderungen im Hostprojekt beachten; **kein** echter AAR-/Geräte-Build wurde durchgeführt. GitHub Actions [41227672665](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41227672665) hat diesen Bibliotheksbuild erfolgreich ausgeführt.
@@ -27,6 +31,7 @@ Nach dieser einmaligen Source-Extraktion in einen sauberen Checkout als **pure K
 - `src/main/kotlin/de/eg/recipe/RecipeDraftImport.kt`
 - `src/main/kotlin/de/eg/recipe/RecipeDraftRevalidation.kt`
 - `src/main/kotlin/de/eg/recipe/BoundedDraftJson.kt`
+- `src/main/kotlin/de/eg/recipe/AppQuantityBridge.kt`
 - `src/main/kotlin/de/eg/recipe/AndroidLocalModelAdapter.kt` (optional, mit Gate)
 
 For optional read-only 1/7/56-day planning and demand projections, additionally include:
