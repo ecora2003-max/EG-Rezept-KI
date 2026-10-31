@@ -1,10 +1,10 @@
 # Offline-Fachkern und Vertragsprüfung: gemessener Testbericht
 
-**Datum:** 31.10.2026. **Vertrag:** `EG-Architecture@d22862739bd0e3ef8451ce029e54f7c33ee53e40` (`1.0.0-draft`). **Verifizierter GitHub-Codecommit:** `c66d7be437a47af052cd3af878ff06fc3ca0b250`.
+**Datum:** 31.10.2026. **Vertrag:** `EG-Architecture@d22862739bd0e3ef8451ce029e54f7c33ee53e40` (`1.0.0-draft`). **Verifizierter GitHub-Codecommit:** `0b429348d409e0fce41c8728b74c1c246fa806e1`.
 
 ## Reproduzierbarkeit
 
-GitHub Actions [Run 41220695779](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41220695779) ist **completed/success**, einschließlich aller Ausführungsschritte und kompletter JSON-Schema-2020-12-Validierung. Runner: Ubuntu, Temurin JDK 17, Kotlin 1.9.25, Python 3.11, freie `brotli==1.1.0` und `jsonschema==4.26.0`, ausschließlich synthetische Daten.
+GitHub Actions [Run 41221248578](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41221248578) ist **completed/success**, einschließlich aller Ausführungsschritte und kompletter JSON-Schema-2020-12-Validierung. Runner: Ubuntu, Temurin JDK 17, Kotlin 1.9.25, Python 3.11, freie `brotli==1.1.0` und `jsonschema==4.26.0`, ausschließlich synthetische Daten.
 
 ```bash
 python3 -m pip install brotli==1.1.0
@@ -25,10 +25,11 @@ Der Runner prüft zunächst per SHA-256 das Archiv `transfer/bundle.part1.b64` +
 | `RecipeEngineTest` – Validierung, Nährwertberechnung, Kontextflags, Meal Prep, No-Side-Effect | 47 | 0 | 0 |
 | `CombinatorialGeneratorTest` – 27 Gerichte, Mengen und Unabhängigkeit | 10 | 0 | 0 |
 | `GoalAwareRecipePlannerTest` – bestätigte Ziele, Rangfolge, fehlende Daten | 8 | 0 | 0 |
+| `OnDeviceRecipeGatewayTest` – Statusprüfung, kein Snapshot-Leak, Fehlerfallback, Fake-Modell | 13 | 0 | 0 |
 | JSON-Schema Draft 2020-12 – zwei positive Nachrichten | 2 | 0 | 0 |
 | JSON-Schema Draft 2020-12 – je acht absichtlich ungültige Nachrichten abgewiesen | 16 | 0 | 0 |
 
-**65/65 Kotlin-Testfälle und 18/18 vollständige Schema-Prüffälle bestanden**. Zusätzlich zwei einfache Vertragsstrukturprüfungen `scripts/contract_check.py`. CI-Log: `SUMMARY passed=47 failed=0`, `SUMMARY combinatorial_generator passed=10 failed=0`, `SUMMARY goal_aware_planner passed=8 failed=0`, zweimal `PASS full draft 2020-12 recipe.draft message` und zweimal `PASS 8 malformed messages rejected`. Diese Resultate belegen **keine** getestete Android-App.
+**78/78 Kotlin-Testfälle und 18/18 vollständige Schema-Prüffälle bestanden**. Zusätzlich zwei einfache Vertragsstrukturprüfungen `scripts/contract_check.py`. CI-Log: `SUMMARY passed=47 failed=0`, `SUMMARY combinatorial_generator passed=10 failed=0`, `SUMMARY goal_aware_planner passed=8 failed=0`, `SUMMARY on_device_gateway passed=13 failed=0`, zweimal `PASS full draft 2020-12 recipe.draft message` und zweimal `PASS 8 malformed messages rejected`. Diese Resultate belegen **keine** getestete Android-App.
 
 ## Grenz- und Invariantenfälle
 
@@ -40,6 +41,10 @@ Der Runner prüft zunächst per SHA-256 das Archiv `transfer/bundle.part1.b64` +
 - Einkaufsbedarf ist kein bestätigter Kauf/Bestand; Angebote nur mit gültigem Zeitfenster und gültiger Herkunft; MHD ist keine automatische Verderbsbehauptung.
 - Meal-Prep-Einfriermengen, unbekannte/zu kleine Gefrierkapazität, keine fiktive Kühlkettenfreigabe, Rohzutaten nicht doppelt auf Portionen gebucht.
 - Aus `propose` folgen **keine** realen Einkäufe, Vorratsbewegungen, Herstellungen, Rezepteinträge oder Verzehrereignisse.
+
+## Zusätzlich getesteter Modellgateway
+
+Ein *Fake* simuliert lokalen Modellstatus `AVAILABLE`, `DOWNLOADABLE`, `DOWNLOADING`, `UNAVAILABLE` und `UNKNOWN`, Status-/Generierungsfehler, leere und übergroße Modellausgaben, blockierte Allergen-/Food-Konflikte und das Nichtweitergeben der deaktivierten sowie unfreigegebenen Snapshots. Modellresultate werden **niemals** ungeprüft als sicher freigegeben; der reine Offline-Fallback benötigt keine Modellinstanz.
 
 ## Grenzen
 
