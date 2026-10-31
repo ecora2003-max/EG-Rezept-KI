@@ -1,36 +1,46 @@
-# Reproduzierbarer Testbericht – 31.10.2026
+# Offline-Fachkern und Vertragsprüfung: gemessener Testbericht
 
-## Code und Umgebung
+**Datum:** 31.10.2026. **Vertrag:** `EG-Architecture@d22862739bd0e3ef8451ce029e54f7c33ee53e40` (`1.0.0-draft`). **Verifizierter GitHub-Codecommit:** `c66d7be437a47af052cd3af878ff06fc3ca0b250`.
 
-- Arbeitsvertrag: `EG-Architecture@d22862739bd0e3ef8451ce029e54f7c33ee53e40`, `1.0.0-draft`.
-- Module-Sourcen sind verlustfrei in `transfer/bundle.part1.b64` und `bundle.part2.b64` archiviert, Archiv SHA-256 `a5c53a77dfdf74d0cfc6497db5f415cf2abb0a32e7a3a0363ca2dc9f59581838`; Entpackung via `scripts/restore_sources.py`.
-- Lokale Umgebung: Kotlin CLI 1.9.0, OpenJDK 21; kein Netzwerk und keine Android-Hardware.
-- GitHub Actions: OpenJDK 17, Kotlin CLI 1.9.25, Python 3.11; echter erfolgreicher Workflow-Run [41219880851](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41219880851) auf Commit `2c06f2be6bd24c653bf173c7be32747ca5e21864`.
-- Typ der Daten: ausschließlich synthetische Fixtures, keine echten Nutzer-, Einkaufs- oder Gesundheitsdaten.
+## Reproduzierbarkeit
 
-## Befehle und Messung
+GitHub Actions [Run 41220695779](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41220695779) ist **completed/success**, einschließlich aller Ausführungsschritte und kompletter JSON-Schema-2020-12-Validierung. Runner: Ubuntu, Temurin JDK 17, Kotlin 1.9.25, Python 3.11, freie `brotli==1.1.0` und `jsonschema==4.26.0`, ausschließlich synthetische Daten.
 
 ```bash
 python3 -m pip install brotli==1.1.0
 bash scripts/test.sh
+# GitHub CI zusätzlich:
+python3 -m pip install jsonschema==4.26.0
+# Pinned: EG-Architecture commit d228627...
+python3 scripts/full_contract_check.py build/recipe-draft.json build/contract.schema.json
+python3 scripts/full_contract_check.py build/smart-draft.json build/contract.schema.json
 ```
 
-Der Test-Runner stellt den source code aus dem SHA-256-Archiv wieder her, kompiliert Kotlin-Kern und Testtreiber, führt `java -ea -jar build/tests.jar` aus, führt ein Standalone-Demo aus und validiert den Basisvertrag. Sowohl lokal als auch in Run 41219880851: **47/47 positiv, 0 fehlgeschlagen, 0 übersprungen.** Demo JSON strukturell geprüft. Der GitHub-Run enthält alle Einzelzeilen und `SUMMARY passed=47 failed=0` als Beleg.
+Der Runner prüft zunächst per SHA-256 das Archiv `transfer/bundle.part1.b64` + `bundle.part2.b64` (SHA-256 `a5c53a77dfdf74d0cfc6497db5f415cf2abb0a32e7a3a0363ca2dc9f59581838`), entpackt exakt zwei Kotlin-Quellpfade und kompiliert die Kotlin-Klassen. Die erzeugten Plaintext-Dateien sind keine binäre Laufzeitkomponente.
 
-## Prüfmengen
+## Tatsächlich ausgeführte Resultate
 
-- **Flagmatrix:** alle acht Kombinationen `considerStock/Shopping/Offers`; bei `false` dürfen stark geänderte Snapshots das Ergebnis nicht beeinflussen.
-- **Allergene/Ernährung:** bestätigter Allergen- und Diet-Konflikt blockiert; unbekannt = Review; nicht bestätigtes Verbot gilt nicht als bestätigt; bestätigtes `FOOD:<foodTypeId>` blockiert; unbekanntes Restriktionsformat blockiert.
-- **Mengen/Nährwerte:** 2/4-Portionen, trocken/gegart nicht vertauschbar, Null/Negativ, falsche Mengenbasis, fehlende Mengen, nicht belegte/negative Nährstoffe, selektiv fehlendes Vitamin D/B12, partial vs vollständige Summen, Long-Überlauf.
-- **Planung:** unbekannte Vorräte, nicht freigegebene Snapshots, Einkaufslistenposition ≠ verfügbarer Bestand, zeitgebundene Angebote, MHD nur Warnung, fehlendes Budget, unbekannter/zu kleiner Gefrierplatz, tatsächliche Herstellung und Verzehr **nicht** gebucht.
-- **Robustheit:** falsches Gerät, Zeitvorgaben, unbestätigte vs bestätigte Ziele, untrusted-Kandidat weiterhin validiert, JSON-Escaping, deterministische Wiederholung und Fehlerpfade.
+| Prüfung | Bestanden | Fehlgeschlagen | Übersprungen |
+| --- | ---: | ---: | ---: |
+| `RecipeEngineTest` – Validierung, Nährwertberechnung, Kontextflags, Meal Prep, No-Side-Effect | 47 | 0 | 0 |
+| `CombinatorialGeneratorTest` – 27 Gerichte, Mengen und Unabhängigkeit | 10 | 0 | 0 |
+| `GoalAwareRecipePlannerTest` – bestätigte Ziele, Rangfolge, fehlende Daten | 8 | 0 | 0 |
+| JSON-Schema Draft 2020-12 – zwei positive Nachrichten | 2 | 0 | 0 |
+| JSON-Schema Draft 2020-12 – je acht absichtlich ungültige Nachrichten abgewiesen | 16 | 0 | 0 |
 
-## Getrennte Schema-Prüfung
+**65/65 Kotlin-Testfälle und 18/18 vollständige Schema-Prüffälle bestanden**. Zusätzlich zwei einfache Vertragsstrukturprüfungen `scripts/contract_check.py`. CI-Log: `SUMMARY passed=47 failed=0`, `SUMMARY combinatorial_generator passed=10 failed=0`, `SUMMARY goal_aware_planner passed=8 failed=0`, zweimal `PASS full draft 2020-12 recipe.draft message` und zweimal `PASS 8 malformed messages rejected`. Diese Resultate belegen **keine** getestete Android-App.
 
-- `scripts/contract_check.py`: **nur** dependency-freie Struktur-/Invariantenprüfung, keine vollständige Schema-Konformitätsaussage.
-- `scripts/full_contract_check.py`: echte `jsonschema.Draft202012Validator` mit `FormatChecker` gegen gepinnte Architekturdatei und acht mutierte negative Nachrichten. Per CI eingeführt auf Commit `70071637b36011b9bfad53db850d0f72c087900d`; **Lauf zu dieser Dokumentation noch nicht abgeschlossen/verifiziert**.
-- Keine Android- oder App-Gesamtintegration; Quellen-/Medizingarantien nicht beansprucht.
+## Grenz- und Invariantenfälle
 
-## Annahmegrenzen
+- Die drei Flags laufen in allen **acht** Kombinationen, nicht gewählter Snapshot darf keinerlei Einfluss haben; ausgewählt aber fehlend → `null` und Warnung statt Nullbestand.
+- Bestätigte Allergie, eingeschränkte Ernährung und verbotener Lebensmitteltyp werden geprüft und gegebenenfalls blockiert. Unbekannter Allergenstatus erzeugt zwingend Review. Externe/untrusted Kandidaten erhalten keine automatische Verträglichkeitsfreigabe.
+- Unterschiedliche Mengenbasis und Roh-/Gargewicht, ungültige oder widersprüchliche Mengen, zwei/vier Portionen, Überlauf, fehlende Gramm-/Milliliterdaten.
+- Fehlendes Vitamin D/B12 lässt genau diese Summen unbekannt, während vorhandene Makrowerte erhalten bleiben; `BigDecimal` statt unkontrollierter Float-Arithmetik.
+- Keine unbestätigten Nährstoffziele; bestätigte Ziele nur dann `IN_RANGE`, wenn zugehörige pro-Portion-Mengen vollständig belegt sind.
+- Einkaufsbedarf ist kein bestätigter Kauf/Bestand; Angebote nur mit gültigem Zeitfenster und gültiger Herkunft; MHD ist keine automatische Verderbsbehauptung.
+- Meal-Prep-Einfriermengen, unbekannte/zu kleine Gefrierkapazität, keine fiktive Kühlkettenfreigabe, Rohzutaten nicht doppelt auf Portionen gebucht.
+- Aus `propose` folgen **keine** realen Einkäufe, Vorratsbewegungen, Herstellungen, Rezepteinträge oder Verzehrereignisse.
 
-Die 47 Tests belegen den Offline-Fachkern, **nicht** die Sicherheit einer individuellen Mahlzeit ohne verlässliche Zutatenfakten. Eine erfolgreiche JSON-Schema-Prüfung ersetzt keine End-to-End-Tests mit Room und realen App-Adaptern. On-device-LLM ist noch nicht implementiert; ohne Modell garantiert der Offline-Kern dennoch eine reproduzierbare Ausgabe.
+## Grenzen
+
+Die Engine verwendet keine persönlichen Ernährungsdaten. Quellen- und Lizenzfragen für reale Produkte/Nährwerte sind Sache der lesenden Host-Adapter. **Es wurde kein auf realer Android-Hardware laufendes LLM, keine tatsächliche Room-Anbindung, keine automatische Allergensicherheitsgarantie, kein vollständiges Produktpreisverzeichnis und kein KI-Freitextgenerator nachgewiesen.** Die freie deterministische Offline-Generierung mit 27 variablen Kombinationen und nachvollziehbarer Prüfung ist nutzbar; echte KI-Sprachgenerierung bleibt optionales/offenes Integrationsziel.
