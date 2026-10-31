@@ -2,6 +2,14 @@
 
 **Unterstützte öffentliche Architekturversion:** `1.0.0-draft`, gelesen aus `EG-Architecture@25541fc877751f81848ac160cb0d9577cbcf83c8`, insbesondere `contracts/v1/contract.schema.json`. Der Haupt-App-Adapter darf Schema, Felder und Validierung nicht still ändern. Kein Zugriff auf fremde Schreibrepositories oder produktive Nutzerdaten.
 
+## Kotlin-Bibliotheksbuild und JSON-Wiedereinlesen
+
+Der verifizierte Build `bash scripts/build_library.sh` erzeugt `build/eg-rezept-ki-core.jar` aus allen 12 reinen Kotlin-Moduldateien ohne Fat-JAR und ohne Android-SDK-Abhängigkeit. Für die Android-App die bestehenden Kotlin-Runtime/Desugaring-Anforderungen im Hostprojekt beachten; **kein** echter AAR-/Geräte-Build wurde durchgeführt. GitHub Actions [41227672665](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41227672665) hat diesen Bibliotheksbuild erfolgreich ausgeführt.
+
+`BoundedDraftJson.decode(json)` bietet einen typgenauen, gegen übergroße Texte, Tiefe, Menge von JSON-Werten und Strings begrenzten Decoder. Danach ausschließlich `RecipeDraftImport.read` und `RecipeDraftRevalidation.revalidate` mit aktuellen Host-Einwilligungen und belegten Zutatenfakten verwenden. **Nicht** aus gültigem JSON auf eine vollständige Schema-Konformität schließen; die formale Prüfung unter `contracts/v1` bleibt zusätzlich verpflichtend. Keine fremden `nutrition`, `confirmed`, `sourceStatus` oder `verification`-Behauptungen vertrauen. [Details](IMPORT.md).
+
+**Neuere Architektur geprüft:** `EG-Architecture@d7aa7dda1f0a34b52102b35785195e7ade26ceb4`. Die kanonische v1-Schema-Blob-SHA `bedde4677342817fe6b883962c8dfbbd60100072` blieb unverändert. Der neue separate v1.1-Shopping-Entwurf ist für die Rezept-KI **nicht** still aktiviert. [Vertragsfolgen](ARCHITECTURE_IMPACT_20261031.md).
+
 ## Build und Integration
 
 ```bash
@@ -18,6 +26,8 @@ Nach dieser einmaligen Source-Extraktion in einen sauberen Checkout als **pure K
 - `src/main/kotlin/de/eg/recipe/OnDeviceRecipeGateway.kt`
 - `src/main/kotlin/de/eg/recipe/RecipeDraftImport.kt`
 - `src/main/kotlin/de/eg/recipe/RecipeDraftRevalidation.kt`
+- `src/main/kotlin/de/eg/recipe/BoundedDraftJson.kt`
+- `src/main/kotlin/de/eg/recipe/AndroidLocalModelAdapter.kt` (optional, mit Gate)
 
 For optional read-only 1/7/56-day planning and demand projections, additionally include:
 
@@ -90,7 +100,7 @@ Verbotene/geschützte Informationen werden ausschließlich über `confirmed=true
 
 ## Validierung, Releases und offene Gate
 
-Ein reproduzierbarer Kotlin-/Python-Workflow prüft **129 synthetische Offline-Funktionstests** plus zwei gültige und sechzehn bewusst fehlerhafte JSON-Messages sowie 56 Plan-Rezepte im vollständigen Draft-2020-12-Validator gegen die gepinnte Architekturdatei. [GitHub CI Run 41224635664](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41224635664) erfolgreich. Änderungen am Architekturvertrag erfordern erneute Anpassungs- und Negativtests; das Schema ist als `1.0.0-draft` nicht final freigegeben.
+Ein reproduzierbarer Kotlin-/Python-Workflow prüft **169 synthetische Offline-Funktionstests** plus zwei gültige und sechzehn bewusst fehlerhafte JSON-Messages sowie 56 Plan-Rezepte im vollständigen Draft-2020-12-Validator gegen die gepinnte Architekturdatei. [GitHub CI Run 41227672665](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41227672665) erfolgreich. Änderungen am Architekturvertrag erfordern erneute Anpassungs- und Negativtests; das Schema ist als `1.0.0-draft` nicht final freigegeben.
 
 **Noch nicht umgesetzt:** echte Android-Host-/Room-Integration, Hardware-Tests, on-device LLM. Diese Grenzen nicht als bestandene Tests ausgeben. Keine eigene Rezept-, Einkaufs-, Vorrats-, Charge- oder Verzehrdatenbank.
 
