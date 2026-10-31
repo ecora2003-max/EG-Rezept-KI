@@ -2,7 +2,7 @@
 
 ## Abgrenzung
 
-**Der vorliegende Kotlin-Kern ruft kein Sprachmodell auf.** Alle Kernfunktionen laufen offline und kostenlos. KI-Modellkandidaten können über `RecipeCandidateGenerator`/`ProvidedCandidates` eingebracht werden, passieren aber ausnahmslos denselben deterministischen Validator und sind höchstens `REVIEW_REQUIRED`. Keine implizite Netzwerkübertragung personenbezogener Gesundheits-/Vorratsdaten.
+**Der vorliegende Kotlin-Kern ruft kein Sprachmodell auf, stellt aber mittlerweile eine getestete lokale Modell-Schnittstelle bereit.** Alle Kernfunktionen laufen offline und kostenlos. KI-Modellkandidaten können über `RecipeCandidateGenerator`/`ProvidedCandidates` eingebracht werden, passieren aber ausnahmslos denselben deterministischen Validator und sind höchstens `REVIEW_REQUIRED`. Keine implizite Netzwerkübertragung personenbezogener Gesundheits-/Vorratsdaten.
 
 ## Nachgewiesene Android-Möglichkeit, keine pauschale Gerätegarantie
 
@@ -15,6 +15,10 @@ Offizielle Primärquellen:
 - https://developers.google.com/ml-kit/genai/prompt/android
 - https://developers.google.com/ml-kit/genai
 
+## Implementierter sicherer Modellport
+
+`src/main/kotlin/de/eg/recipe/OnDeviceRecipeGateway.kt` kapselt `LocalModel.availability()` und `LocalModel.suggest(request)` für eine **rein lokale** Hostimplementierung. Bei fehlender Modellinstanz, Status `DOWNLOADABLE`, `DOWNLOADING`, `UNAVAILABLE`, `UNKNOWN`, Status-/Inferenzfehler, leerem oder fehlerhaftem Output und mehr als 32 Kandidaten erfolgt ein lokaler Offline-Fallback. Vorgeschaltete Datenminimierung verhindert, dass deaktivierte, nicht geteilte oder unqualifizierte Bestands-/Einkaufs-/Angebotssnapshots dem Modell übergeben werden. Modellkandidaten sind stets `UNTRUSTED_PROVIDED`/`REVIEW_REQUIRED`, nicht allergenfrei freigegeben. **13 synthetische Tests** bestanden in [CI Run 41221248578](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41221248578). Ein echter Android-AICore/ML-Kit-Adapter oder realer Geräte-/Privacytest ist weiterhin offen.
+
 ## Vorgesehene Trennung
 
 1. Android-Host prüft Geräte-/Modellverfügbarkeit und Datenschutzfreigabe.
@@ -24,4 +28,4 @@ Offizielle Primärquellen:
 5. Bei nicht verfügbarer/inaktiver KI, Quoten-/Modellfehler oder User-Opt-out: **OfflineGenerator**.
 6. Codex muss Android-Abhängigkeiten, Modellbereitstellung, Geräte-Tests, Nutzerzustimmung und OOM-/Latenzgrenzen separat prüfen. Kein Server, API-Key oder Zahlmodell wird vorausgesetzt.
 
-**Noch offen:** echter Android-Adapter und Geräte-E2E-Tests; deswegen keine Ankündigung als fertiges On-device-Feature.
+**Noch offen:** konkreter Android-ML-Kit-Hostadapter und Geräte-E2E-Tests; deswegen keine Ankündigung als fertiges On-device-Feature.
