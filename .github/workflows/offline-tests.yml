@@ -43,7 +43,7 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check jsonschema==4.26.0
           curl --fail --location --silent --show-error --retry 2 \
-            https://raw.githubusercontent.com/ecora2003-max/EG-Architecture/d22862739bd0e3ef8451ce029e54f7c33ee53e40/contracts/v1/contract.schema.json \
+            https://raw.githubusercontent.com/ecora2003-max/EG-Architecture/25541fc877751f81848ac160cb0d9577cbcf83c8/contracts/v1/contract.schema.json \
             --output build/contract.schema.json
           python scripts/full_contract_check.py build/recipe-draft.json build/contract.schema.json
           python scripts/full_contract_check.py build/smart-draft.json build/contract.schema.json
