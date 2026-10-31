@@ -21,9 +21,9 @@ python3 -m pip install brotli==1.1.0
 bash scripts/test.sh
 ```
 
-Der Runner stellt die beiden Quellen aus `transfer/bundle.part1.b64` und `bundle.part2.b64` wieder her, prüft ihre Prüfsumme, kompiliert sie mit Kotlin, führt **65 Regressionstests** aus und kontrolliert beide synthetischen Demo-Vertragsnachrichten auf grundlegende Gültigkeit. Vollständige Draft-2020-12-Validierung mit **2 gültigen und 16 bewusst fehlerhaften** Nachrichten läuft zusätzlich im [GitHub-Actions-Workflow](.github/workflows/offline-tests.yml) gegen den gepinnten Architekturvertrag.
+Der Runner stellt die beiden Quellen aus `transfer/bundle.part1.b64` und `bundle.part2.b64` wieder her, prüft ihre Prüfsumme, kompiliert sie mit Kotlin, führt **78 Regressionstests** aus und kontrolliert beide synthetischen Demo-Vertragsnachrichten auf grundlegende Gültigkeit. Vollständige Draft-2020-12-Validierung mit **2 gültigen und 16 bewusst fehlerhaften** Nachrichten läuft zusätzlich im [GitHub-Actions-Workflow](.github/workflows/offline-tests.yml) gegen den gepinnten Architekturvertrag.
 
-**Verifizierter Build:** [Run 41220695779](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41220695779), Commit `c66d7be437a47af052cd3af878ff06fc3ca0b250`, **65/65 Tests erfolgreich**, vollständige JSON-Schema-Prüfungen bestanden.
+**Verifizierter Build:** [Run 41221248578](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41221248578), Commit `0b429348d409e0fce41c8728b74c1c246fa806e1`, **78/78 Tests erfolgreich**, vollständige JSON-Schema-Prüfungen bestanden.
 
 ## Android und Einschränkungen
 
