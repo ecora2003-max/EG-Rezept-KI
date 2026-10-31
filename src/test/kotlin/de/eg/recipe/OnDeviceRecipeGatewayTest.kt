@@ -91,6 +91,27 @@ object OnDeviceRecipeGatewayTest {
         check(undated.received!!.stock == null &&
               undated.received!!.shopping == null &&
               undated.received!!.offers == null)
-        println("SUMMARY on_device_gateway passed=13 failed=0")
+        // Future snapshots must never be disclosed to the optional model, even
+        // with all three flags enabled and otherwise approved metadata.
+        val futureModel = Fake()
+        gate.propose(request(RecipeEngine.Flags(true,true,true)).copy(
+            stock=snapshot.copy(asOf="2026-10-31T16:00:01Z"),
+            shopping=snapshot.copy(asOf="2026-11-01T17:00:00+01:00"),
+            offers=offer.copy(asOf="2026-10-31T17:00:01+01:00")),noFacts,futureModel)
+        check(futureModel.received!!.stock == null &&
+              futureModel.received!!.shopping == null &&
+              futureModel.received!!.offers == null)
+
+        // Equal instants with different offsets remain eligible; do not
+        // compare timestamps lexicographically or by local wall-clock time.
+        val sameInstantModel = Fake()
+        gate.propose(request(RecipeEngine.Flags(true,true,true)).copy(
+            stock=snapshot.copy(asOf="2026-10-31T16:00:00Z"),
+            shopping=snapshot.copy(asOf="2026-10-31T18:00:00+02:00"),
+            offers=offer.copy(asOf="2026-10-31T16:00:00Z")),noFacts,sameInstantModel)
+        check(sameInstantModel.received!!.stock != null &&
+              sameInstantModel.received!!.shopping != null &&
+              sameInstantModel.received!!.offers != null)
+        println("SUMMARY on_device_gateway passed=15 failed=0")
     }
 }
