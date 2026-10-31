@@ -47,3 +47,4 @@ jobs:
             --output build/contract.schema.json
           python scripts/full_contract_check.py build/recipe-draft.json build/contract.schema.json
           python scripts/full_contract_check.py build/smart-draft.json build/contract.schema.json
+          python scripts/plan_contract_check.py build/meal-plan-drafts.json build/contract.schema.json
