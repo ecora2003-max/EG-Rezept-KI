@@ -15,7 +15,7 @@ Week and day projections filter existing occurrences and calculate quantities fr
 ## Safety and unknowns
 
 - `GoalAwareRecipePlanner` checks each recipe on the applicable future date. Confirmed restrictions, equipment, meal types, and context flags pass to each slot; blocked candidates are excluded. If no valid option is available, an explicit unfilled slot is returned.
-- `MealPlanDemand` groups by food type, unit, mass basis and RAW/COOKED state, avoiding false conversions. Incomplete quantities or overflowing sums produce `amount=null`, not fabricated zero or negative quantities.
+- `MealPlanDemand` groups by food type, unit, mass basis and RAW/COOKED state, avoiding false conversions. Incomplete quantities or overflowing sums produce `amount=null`, not fabricated zero or negative quantities. Identical duplicate occurrence IDs are counted once; conflicting duplicates are rejected (`IllegalArgumentException`). Missing payload/ingredient structure, invalid units/bases and nonpositive or nonintegral quantities are rejected instead of silently dropping lines and undercounting. A missing **amount** with a known unit/basis remains an unknown sum, not a validation failure.
 - Source snapshot flags remain independent. Shopping demand is **not** purchased inventory. A future offer must be valid for that slot's date; no static 56-day discount guarantee exists.
 - Frozen portion allocation across repeated meals is **not implemented**. Nonzero `freezePortions` or specified `freezerCapacityPortions` is rejected rather than silently ignored. A host must plan freezer usage separately for each production event.
 - Nährwert-, Allergen- und Kühlkettenlücken bleiben im jeweiligen Rezeptentwurf erhalten. No actual stock/inventory writes exist here.
@@ -24,6 +24,6 @@ Week and day projections filter existing occurrences and calculate quantities fr
 
 ## Reproducible checks
 
-`bash scripts/test.sh` compiles and executes `MealPlanHorizonTest` (7 checks) and `MealPlanSafetyTest` (7 checks) plus the previously validated 78 engine/model-gateway checks. `examples/MealPlanDemo.kt` emits 56 synthetic `recipe.draft` objects as JSON. CI separately invokes `scripts/plan_contract_check.py` with the pinned canonical JSON Schema and checks all **56 messages**. Record actual CI run SHA, pass/fail and skip count in `docs/STATUS.md`.
+`bash scripts/test.sh` compiles and executes `MealPlanHorizonTest` (7 checks) and `MealPlanSafetyTest` (7 checks) plus `MealPlanDemandTest` (16 checks) and the previously validated 78 engine/model-gateway checks. `examples/MealPlanDemo.kt` emits 56 synthetic `recipe.draft` objects as JSON. CI separately invokes `scripts/plan_contract_check.py` with the pinned canonical JSON Schema and checks all **56 messages**. Record actual CI run SHA, pass/fail and skip count in `docs/STATUS.md`.
 
 **Production integration:** Codex must map explicit user-confirmed meal slots to the existing Planning model and ensure it never treats multiple views as additive demand. No Room, Google Sheet, network call or other module's repository is modified by this port.
