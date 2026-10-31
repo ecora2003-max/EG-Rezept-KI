@@ -29,3 +29,9 @@ Offizielle Primärquellen:
 6. Codex muss Android-Abhängigkeiten, Modellbereitstellung, Geräte-Tests, Nutzerzustimmung und OOM-/Latenzgrenzen separat prüfen. Kein Server, API-Key oder Zahlmodell wird vorausgesetzt.
 
 **Noch offen:** konkreter Android-ML-Kit-Hostadapter und Geräte-E2E-Tests; deswegen keine Ankündigung als fertiges On-device-Feature.
+
+## Host-Autorisierung vor optionaler Android-Inferenz (31.10.2026)
+
+Der neue **pure Kotlin**-Port `AndroidLocalModelAdapter.kt` nimmt eine vom Android-Host implementierte `AndroidBridge` und eine `Authorization` entgegen. Vor jedem Status- oder Inferenzaufruf müssen **alle drei** Host-Freigaben wahr sein: `userOptedIn` (ausdrückliches Opt-in), `requestDataApproved` (Freigabe der tatsächlich an das lokale Modell gegebenen Anfrage) und `localOnlyExecutionVerified` (Host hat ausschließlich lokale Ausführung nachgewiesen). Sonst folgt deterministisch `OFFLINE_FALLBACK` mit `USER_OPT_OUT`, `MODEL_INPUT_NOT_APPROVED` oder `LOCAL_ONLY_NOT_VERIFIED`; die Bridge wird dann **nicht** aufgerufen. Die Flags und Snapshot-Freigaben werden zusätzlich vom bestehenden Gateway gefiltert.
+
+**Diese drei Werte sind nur vom Host gesetzte Aussagen, keine technisch nachgewiesene Geräte-/Netzwerk-Attestation.** Der Android-Integrator muss den tatsächlichen SDK-Aufruf, die Modellverfügbarkeit, Datentransfers, die Nutzereinwilligung und die Laufzeitberechtigungen gesondert prüfen. Ein Bridge-Objekt, das eine Cloud-API aufruft, verletzt den Vertrag und ist nicht zulässig. Es gibt weiterhin **keine echte Android-, ML-Kit- oder Hardwareprüfung**; der neue Test benutzt ausschließlich eine synthetische Fake-Bridge. Kein automatischer Modelldownload, keine Cloud-Pflicht, keine Buchung oder Freigabe eines Rezeptentwurfs.
