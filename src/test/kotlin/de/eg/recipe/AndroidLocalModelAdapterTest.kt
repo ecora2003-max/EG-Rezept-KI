@@ -74,6 +74,36 @@ object AndroidLocalModelAdapterTest {
             offers = offer.copy(shared = false)), facts, approved, unshared)
         verify(unshared.lastRequest!!.stock == null && unshared.lastRequest!!.shopping == null &&
             unshared.lastRequest!!.offers == null)
+        // Future-dated snapshots are never disclosed to an optional model,
+        // even when every consent bit is true and each context flag is enabled.
+        // Exercise all eight independent flag combinations at the Android boundary.
+        val futureStock = stock.copy(asOf = "2026-11-01T00:00:00+01:00")
+        val futureOffer = offer.copy(asOf = "2026-11-01T00:00:00+01:00")
+        for (bits in 0..7) {
+            val flags = RecipeEngine.Flags(bits and 1 != 0, bits and 2 != 0, bits and 4 != 0)
+            val fake = Fake()
+            port.propose(request(flags).copy(
+                stock = futureStock, shopping = futureStock, offers = futureOffer
+            ), facts, approved, fake)
+            val seen = fake.lastRequest
+            verify(seen != null && seen.stock == null &&
+                seen.shopping == null && seen.offers == null)
+        }
+
+        // Status must be AVAILABLE before any model inference. No implicit
+        // downloads or calls on unsupported, downloading or unknown devices.
+        for (state in listOf(
+            OnDeviceRecipeGateway.Availability.DOWNLOADABLE,
+            OnDeviceRecipeGateway.Availability.DOWNLOADING,
+            OnDeviceRecipeGateway.Availability.UNAVAILABLE,
+            OnDeviceRecipeGateway.Availability.UNKNOWN
+        )) {
+            val fake = Fake(state)
+            val output = port.propose(request(), facts, approved, fake)
+            verify(output.provider == "OFFLINE_FALLBACK" &&
+                output.fallbackReason == "MODEL_NOT_AVAILABLE" &&
+                fake.statusCalls == 1 && fake.inferCalls == 0)
+        }
         println("SUMMARY android_local_model_adapter passed=$passed failed=0 skipped=0")
     }
 }
