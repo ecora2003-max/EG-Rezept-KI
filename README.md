@@ -29,6 +29,10 @@ Der Runner stellt die beiden Quellen aus `transfer/bundle.part1.b64` und `bundle
 
 **Verifizierter Build:** [Run 41228527601](https://github.com/ecora2003-max/EG-Rezept-KI/actions/runs/41228527601), Commit `edd4340e27f89f1b45a9d0f30993789661607f5c`, **183/183 Tests erfolgreich**, vollständige JSON-Schema-Prüfungen bestanden.
 
+## Kompatibilität mit den App-Tausendstelmengen
+
+`AppQuantityBridge.project` bildet belegte Rezeptmengen exakt auf die bestehende 1/1000-g-/ml-/Portion-Einheit der Android-App ab; `foodTypeId` wird **niemals** als konkrete `ProductVersionEntity.id` ausgegeben. Identität, Mengenbasis und RAW/COOKED bleiben getrennt prüfbar. **14 synthetische JVM-Tests**, keine Room-Buchung. [Tatsächliches Host-DTO-Mapping](docs/APP_DTO_MAPPING.md).
+
 ## Strikter, begrenzter JSON-Import
 
 Mit `BoundedDraftJson.decode(text)` steht ein offlinefähiger Kotlin-Decoder bereit, der direkte `recipe.draft`-Roundtrips ermöglicht, genaue Integer/Decimal-Typen erhält und doppelte JSON-Keys, ungültige Escapes sowie Größen-/Tiefenüberschreitungen ablehnt. `RecipeDraftImport.read` und `RecipeDraftRevalidation.revalidate` interpretieren fremde Sicherheits-/Nährwertbehauptungen ausschließlich als **untrusted**, prüfen mit aktuellen Host-Fakten neu und erzeugen keine Buchungen. **Die formale vollständige Schema-Prüfung bleibt zusätzlich erforderlich**. [API/Limitierungen](docs/IMPORT.md).
