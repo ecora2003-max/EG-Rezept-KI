@@ -1,5 +1,7 @@
 # EG-Rezept-KI — unabhängige, offlinefähige Rezeptgenerierung
 
+> **Status 18.11.2026 – REFERENZ/ARCHIV.** Eigenständige Modul-Chat-Steuerung abgelöst durch [Ernaerungsgedaechnis](https://github.com/ecora2003-max/Ernaerungsgedaechnis) mit den vier aktiven Dokumenten `AGENTS.md`, `docs/NOW.md`, `docs/REQUIREMENTS.md` und `docs/ACCEPTANCE.md`. Fachcode/Vertragstests und historische Modulberichte bleiben erhalten; weitere Arbeit hier nur bei konkretem Auftrag.
+
 **Modulstatus:** `PARTIAL_READY` (ausführbarer Offline-Fachkern geprüft; freie neuronale KI-Generierung und Android-Geräteintegration noch nicht nachgewiesen). Dieses Repository liefert ausschließlich **Rezeptentwürfe** für die Android-App Ernährungsgedächtnis. Die gemeinsame semantische Vertragsquelle ist [EG-Architecture](https://github.com/ecora2003-max/EG-Architecture) `1.0.0-draft`. Die produktiven Rezept-, Lager- und Verzehrdatenbanken werden weder ersetzt noch beschrieben.
 
 ## Leistungsumfang
